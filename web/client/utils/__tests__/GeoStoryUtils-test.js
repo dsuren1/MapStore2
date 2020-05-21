@@ -260,7 +260,7 @@ describe("GeoStory Utils", () => {
             expect(content.type).toBe(ContentTypes.COLUMN);
             const mediaContent = content.contents[0];
             expect(mediaContent.type).toBe(ContentTypes.MEDIA);
-            expect(mediaContent.size).toBe("medium");
+            expect(mediaContent.size).toBe("large");
             expect(mediaContent.align).toBe("center");
             expect(mediaContent.id.length).toBe(uuid().length);
             expect(mediaContent.resourceId).toNotExist();
@@ -288,6 +288,13 @@ describe("GeoStory Utils", () => {
             const data = getDefaultSectionTemplate(ContentTypes.TEXT);
             expect(data.id).toExist();
             expect(data.type).toBe(ContentTypes.TEXT);
+        });
+        it("ContentTypes.MEDIA", () => {
+            const data = getDefaultSectionTemplate(ContentTypes.MEDIA);
+            expect(data.id).toBeTruthy();
+            expect(data.type).toBe(ContentTypes.MEDIA);
+            expect(data.size).toBe('large');
+            expect(data.align).toBe('center');
         });
     });
     it('test applyDefaults', () => {

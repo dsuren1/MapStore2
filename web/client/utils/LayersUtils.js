@@ -493,10 +493,12 @@ const LayersUtils = {
             origin: layer.origin,
             thematic: layer.thematic,
             tooltipOptions: layer.tooltipOptions,
-            tooltipPlacement: layer.tooltipPlacement
+            tooltipPlacement: layer.tooltipPlacement,
+            legendOptions: layer.legendOptions
         },
         layer.params ? { params: layer.params } : {},
-        layer.credits ? { credits: layer.credits } : {});
+        layer.credits ? { credits: layer.credits } : {},
+        layer.localizedLayerStyles ? { localizedLayerStyles: layer.localizedLayerStyles } : {});
     },
     /**
     * default initial constant regex rule for searching for a /geoserver/ string in a url

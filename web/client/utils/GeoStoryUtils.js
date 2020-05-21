@@ -242,7 +242,7 @@ export const getDefaultSectionTemplate = (type, localize = v => v) => {
                     contents: [{
                         id: uuid(),
                         type: ContentTypes.MEDIA,
-                        size: 'medium',
+                        size: 'large',
                         align: 'center'
                     }]
                 }
@@ -311,6 +311,15 @@ export const getDefaultSectionTemplate = (type, localize = v => v) => {
             type,
             title: localize("geostory.builder.defaults.titleWebPage"),
             size: 'medium',
+            align: 'center'
+        };
+    }
+    case ContentTypes.MEDIA: {
+        return {
+            id: uuid(),
+            type,
+            title: localize("geostory.builder.defaults.titleUnknown"),
+            size: 'large',
             align: 'center'
         };
     }

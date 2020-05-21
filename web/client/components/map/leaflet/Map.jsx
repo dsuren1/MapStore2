@@ -44,7 +44,8 @@ class LeafletMap extends React.Component {
         interactive: PropTypes.bool,
         resolutions: PropTypes.array,
         hookRegister: PropTypes.object,
-        onCreationError: PropTypes.func
+        onCreationError: PropTypes.func,
+        onMouseOut: PropTypes.func
     };
 
     static defaultProps = {
@@ -69,7 +70,8 @@ class LeafletMap extends React.Component {
         hookRegister: mapUtils,
         style: {},
         interactive: true,
-        resolutions: mapUtils.getGoogleMercatorResolutions(0, 23)
+        resolutions: mapUtils.getGoogleMercatorResolutions(0, 23),
+        onMouseOut: () => {}
     };
 
     state = { };
@@ -160,6 +162,10 @@ class LeafletMap extends React.Component {
                 this.props.onRightClick(event.containerPoint);
             }
         });
+        // The timeout is needed to cover the delay we have for the throttled mouseMove event.
+        this.map.on('mouseout', () => {
+            setTimeout(() => this.props.onMouseOut(), 150);
+        });
 
         this.updateMapInfoState();
         this.setMousePointer(this.props.mousePointer);
@@ -209,8 +215,13 @@ class LeafletMap extends React.Component {
                 });
 
                 event.layer.on('tileloadstart ', () => { event.layer._ms2LoadingTileCount++; });
-                event.layer.on('tileerror', (errorEvent) => { event.layer.layerErrorStream$.next(errorEvent); });
-
+                if (event.layer.options && !event.layer.options.hideErrors || !event.layer.options) {
+                    event.layer.on('tileerror', (errorEvent) => { event.layer.layerErrorStream$.next(errorEvent); });
+                }
+                // WFS data
+                event.layer.on('loaderror', (error) => {
+                    this.props.onLayerError(error.target.layerId);
+                });
             }
         });
 
@@ -396,7 +407,13 @@ class LeafletMap extends React.Component {
             pixel: {
                 x: event.containerPoint.x,
                 y: event.containerPoint.x
-            }
+            },
+            latlng: {
+                lat: event.latlng.lat,
+                lng: event.latlng.lng,
+                z: this.elevationLayer && this.elevationLayer.getElevation(event.latlng, event.containerPoint) || undefined
+            },
+            rawPos: [event.latlng.lat, event.latlng.lng]
         });
     };
 
