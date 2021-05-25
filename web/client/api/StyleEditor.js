@@ -100,7 +100,7 @@ const updateRulesWithColors = (data, params) => {
     const intervalsForUnique = _rules && castArray(_rules).length;
     const customRamp = params.ramp === 'custom' && params.classification.length > 0
         && { name: 'custom', colors: params.classification.map((entry) => entry.color) };
-    const { colors: colorsString } = SLDService.getColor(undefined, params.ramp, intervalsForUnique || params.intervals, customRamp);
+    const { colors: colorsString = [] } = SLDService.getColor(undefined, params.ramp, intervalsForUnique || params.intervals, customRamp);
     let colors = colorsString?.split(',');
     if (params.reverse) colors = colors.reverse();
     return {

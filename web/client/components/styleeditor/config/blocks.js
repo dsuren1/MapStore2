@@ -9,8 +9,6 @@
 import property from './property';
 import omit from 'lodash/omit';
 import includes from 'lodash/includes';
-import {Glyphicon} from "react-bootstrap";
-import React from "react";
 
 const getBlocks = (/* config = {} */) => {
     const symbolizerBlock = {

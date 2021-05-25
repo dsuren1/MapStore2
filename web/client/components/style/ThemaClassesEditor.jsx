@@ -163,7 +163,8 @@ class ThemaClassesEditor extends React.Component {
         if (type === 'before') {
             const isFirstIndex = classIndex === 0;
             updateIndex = isFirstIndex ? 0 : classIndex;
-            updateMinMax = { min: isFirstIndex ? 0 : currentRule.min, max: currentRule.min };
+            updateMinMax = { min: isFirstIndex ? isNil(currentRule.min) ? currentRule.min : 0 : currentRule.min,
+                max: currentRule.min };
         } else if (type === 'after') {
             updateIndex = classIndex === newClassification.length - 1 ? newClassification.length : classIndex + 1;
             updateMinMax = { min: currentRule.max, max: currentRule.max };
