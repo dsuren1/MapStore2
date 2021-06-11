@@ -10,13 +10,19 @@ import React from 'react';
 import Message from '../I18N/Message';
 import Select from 'react-select';
 import PropertyField from './PropertyField';
+import numberLocalizer from 'react-widgets/lib/localizers/simple-number';
+numberLocalizer();
+import { NumberPicker as NP } from 'react-widgets';
+import localizeProps from '../misc/enhancers/localizedProps';
+const NumberPicker = localizeProps("placeholder")(NP);
 
 function Band({
     label = 'styleeditor.band',
     value,
     bands,
     onChange,
-    enhancementType
+    enhancementType,
+    vendorOption
 }) {
     return (
         <>
@@ -56,6 +62,47 @@ function Band({
                     }}
                 />
             </PropertyField>
+            {enhancementType === 'normalize' &&
+            <>
+                <PropertyField
+                    label={'styleeditor.vendorOption.algorithm'}>
+                    <Select
+                        clearable={false}
+                        options={[
+                            {
+                                label: <Message msgId="styleeditor.stretchToMinimumMaximum" />,
+                                value: 'StretchToMinimumMaximum'
+                            },
+                            {
+                                label: <Message msgId="styleeditor.clipToMinimumMaximum" />,
+                                value: 'ClipToMinimumMaximum'
+                            },
+                            {
+                                label: <Message msgId="styleeditor.clipToZero" />,
+                                value: 'ClipToZero'
+                            }
+                        ]}
+                        value={vendorOption?.algorithm}
+                        onChange={option => onChange('algorithm', option.value)}
+                    />
+                </PropertyField>
+                <PropertyField
+                    label={'styleeditor.vendorOption.values'}>
+                    <NumberPicker
+                        placeholder={"styleeditor.vendorOption.minValue"}
+                        format="- ###.###"
+                        value={vendorOption?.minValue}
+                        onChange={val => onChange('minValue', val)}
+                    />
+                    <NumberPicker
+                        placeholder={"styleeditor.vendorOption.maxValue"}
+                        format="- ###.###"
+                        value={vendorOption?.maxValue}
+                        onChange={val => onChange('maxValue', val)}
+                    />
+                </PropertyField>
+            </>
+            }
         </>
     );
 }

@@ -2215,6 +2215,16 @@
             "rgbaBands": "RGB bands",
             "pseudoColor": "Pseudo color",
 
+            "vendorOption": {
+              "algorithm": "Vendor algorithm",
+              "values": "Vendor values",
+              "minValue": "Min Val",
+              "maxValue": "Max Val"
+            },
+            "stretchToMinimumMaximum": "StretchToMinimumMaximum",
+            "clipToMinimumMaximum": "ClipToMinimumMaximum",
+            "clipToZero": "ClipToZero",
+
             "undoStyle": "Undo style",
             "redoStyle": "Redo style",
 

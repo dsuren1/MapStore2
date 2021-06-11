@@ -275,6 +275,7 @@ export const fields = {
             label: band,
             value: band
         }));
+        const vendorOption = ['algorithm', 'minValue', 'maxValue'];
 
         if (channelSelectionType === 'rgb') {
 
@@ -290,6 +291,7 @@ export const fields = {
                                 bands={bandOptions}
                                 label={'styleeditor.' + channelKey}
                                 enhancementType={contrastEnhancement?.enhancementType || 'none'}
+                                vendorOption={contrastEnhancement?.vendorOption || {}}
                                 onChange={(key, newValue) => {
                                     if (key === 'band') {
                                         return onChange({
@@ -313,6 +315,24 @@ export const fields = {
                                                     contrastEnhancement: {
                                                         ...channelSelection[channelKey].contrastEnhancement,
                                                         enhancementType: newValue
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                    if (vendorOption.includes(key)) {
+                                        return onChange({
+                                            contrastEnhancement: {},
+                                            channelSelection: {
+                                                ...value.channelSelection,
+                                                [channelKey]: {
+                                                    ...value.channelSelection[channelKey],
+                                                    contrastEnhancement: {
+                                                        ...channelSelection[channelKey].contrastEnhancement,
+                                                        vendorOption: {
+                                                            ...channelSelection[channelKey]?.contrastEnhancement?.vendorOption,
+                                                            [key]: newValue
+                                                        }
                                                     }
                                                 }
                                             }
@@ -346,6 +366,7 @@ export const fields = {
                     ...bandOptions
                 ]}
                 enhancementType={contrastEnhancement?.enhancementType || 'none'}
+                vendorOption={contrastEnhancement?.vendorOption || {}}
                 onChange={(key, newValue) => {
                     if (key === 'band') {
                         return onChange(newValue === 'auto'
@@ -384,6 +405,38 @@ export const fields = {
                                                 contrastEnhancement: {
                                                     ...channelSelection[channelKey].contrastEnhancement,
                                                     enhancementType: newValue
+                                                }
+                                            }
+                                        };
+                                    }, {})
+                            });
+                    }
+                    if (vendorOption.includes(key)) {
+                        return onChange(channelSelectionType === 'auto'
+                            ? {
+                                channelSelection: undefined,
+                                contrastEnhancement: {
+                                    ...value.contrastEnhancement,
+                                    vendorOption: {
+                                        ...value.contrastEnhancement?.vendorOption,
+                                        [key]: newValue
+                                    }
+                                }
+                            }
+                            : {
+                                contrastEnhancement: {},
+                                channelSelection: Object.keys(channelSelection)
+                                    .reduce((acc, channelKey) => {
+                                        return {
+                                            ...acc,
+                                            [channelKey]: {
+                                                ...channelSelection[channelKey],
+                                                contrastEnhancement: {
+                                                    ...channelSelection[channelKey].contrastEnhancement,
+                                                    vendorOption: {
+                                                        ...channelSelection[channelKey]?.contrastEnhancement?.vendorOption,
+                                                        [key]: newValue
+                                                    }
                                                 }
                                             }
                                         };

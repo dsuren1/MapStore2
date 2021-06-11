@@ -13,6 +13,7 @@ import expect from 'expect';
 import { Simulate, act } from 'react-dom/test-utils';
 import { DragDropContext as dragDropContext } from 'react-dnd';
 import testBackend from 'react-dnd-test-backend';
+import { getStyleParser } from '../../../utils/VectorStyleUtils';
 
 const VisualStyleEditor = dragDropContext(testBackend)(VisualStyleEditorComponent);
 
@@ -273,5 +274,99 @@ describe('VisualStyleEditor', () => {
                 }}
             />, document.getElementById('container'));
         });
+    });
+    it('render visual editor with raster symbolizer for SLD', (done) => {
+        const format = "sld";
+        const styleJSON = {
+            name: "Base SLD1",
+            rules: [
+                {
+                    name: "Rule Title",
+                    symbolizers: [
+                        {
+                            kind: "Raster",
+                            contrastEnhancement: {
+                                enhancementType: "normalize",
+                                vendorOption: {
+                                    algorithm: "StretchToMinimumMaximum",
+                                    minValue: 1,
+                                    maxValue: 50
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+        ReactDOM.render(<VisualStyleEditor
+            format={format}
+            code={"<?xml"}
+            defaultStyleJSON={styleJSON}
+            debounceTime={1}
+            onChange={(newCode) => {
+                getStyleParser(format).readStyle(newCode).then((parsedStyle)=>{
+                    expect(JSON.stringify(parsedStyle)).toEqual(JSON.stringify(styleJSON));
+                    done();
+                }).catch((e)=> done(e));
+            }}
+        />, document.getElementById('container'));
+        const ruleEditorNode = document.querySelector('.ms-style-rules-editor');
+        const symbolizerFields = document.querySelectorAll('.ms-symbolizer-field');
+        expect(ruleEditorNode).toBeTruthy();
+        expect(symbolizerFields.length).toBe(5);
+        expect([...symbolizerFields].map(node => node.children[0].textContent)).toEqual([
+            'styleeditor.grayChannel',
+            'styleeditor.contrastEnhancement',
+            'styleeditor.vendorOption.algorithm',
+            'styleeditor.vendorOption.values',
+            'styleeditor.opacity'
+        ]);
+    });
+    it('render editor with raster symbolizer for css', (done) => {
+        const format = "sld";
+        const styleJSON = {
+            name: "Base SLD1",
+            rules: [
+                {
+                    name: "Rule Title",
+                    symbolizers: [
+                        {
+                            kind: "Raster",
+                            contrastEnhancement: {
+                                enhancementType: "normalize",
+                                vendorOption: {
+                                    algorithm: "StretchToMinimumMaximum",
+                                    minValue: 1,
+                                    maxValue: 50
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+        ReactDOM.render(<VisualStyleEditor
+            format={format}
+            code={`@mode 'Flat';
+                   @styleTitle 'Base CSS';
+
+                   * {
+                     raster-channels: auto;
+                     raster-opacity: 1;
+                  }`
+            }
+            defaultStyleJSON={styleJSON}
+            debounceTime={1}
+            onChange={(newCode) => {
+                getStyleParser(format).readStyle(newCode).then((parsedStyle)=>{
+                    expect(JSON.stringify(parsedStyle)).toEqual(JSON.stringify(styleJSON));
+                    done();
+                }).catch((e)=> done(e));
+            }}
+        />, document.getElementById('container'));
+        const ruleEditorNode = document.querySelector('.ms-style-rules-editor');
+        const symbolizerFields = document.querySelectorAll('.ms-symbolizer-field');
+        expect(ruleEditorNode).toBeTruthy();
+        expect(symbolizerFields.length).toBe(5);
     });
 });
