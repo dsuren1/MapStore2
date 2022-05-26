@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {wizardHandlers} from '../../../misc/wizard/enhancers';
 import WizardContainer from '../../../misc/wizard/WizardContainer';
 import WidgetOptions from './common/WidgetOptions';
 import MapOptions from './map/MapOptions';
 import Preview from './map/PreviewMap';
-
+import MapSwitcher from "../wizard/map/MapSwitcher";
 const Wizard = wizardHandlers(WizardContainer);
 
 export default ({
@@ -27,31 +27,46 @@ export default ({
     closeNodeEditor = () => {},
     isLocalizedLayerStylesEnabled,
     env
-} = {}) => (
-    <Wizard
-        step={step}
-        setPage={setPage}
-        onFinish={onFinish}
-        hideButtons>
-        <MapOptions
-            editNode={editNode}
-            setEditNode={setEditNode}
-            closeNodeEditor={closeNodeEditor}
-            onNodeSelect={onNodeSelect}
-            selectedNodes={selectedNodes}
-            onChange={onChange}
-            isLocalizedLayerStylesEnabled={isLocalizedLayerStylesEnabled}
-            preview={<Preview
+} = {}) => {
+    const [selectedMap, setSelectedMap] = useState({});
+    return (
+        <Wizard
+            step={step}
+            setPage={setPage}
+            onFinish={onFinish}
+            hideButtons>
+            <div>
+                <MapSwitcher
+                    editorData={editorData}
+                    onChange={onChange}
+                    value={editorData.selectedMapId}
+                    setSelectedMap={setSelectedMap}
+                    selectedMap={selectedMap}
+                    withContainer
+                />
+                <MapOptions
+                    editNode={editNode}
+                    setEditNode={setEditNode}
+                    closeNodeEditor={closeNodeEditor}
+                    onNodeSelect={onNodeSelect}
+                    selectedNodes={selectedNodes}
+                    onChange={onChange}
+                    isLocalizedLayerStylesEnabled={isLocalizedLayerStylesEnabled}
+                    preview={<Preview
+                        key={editorData.selectedMapId}
+                        onChange={onChange}
+                        layers={selectedMap && selectedMap.layers}
+                        map={selectedMap}
+                        env={env}
+                        options={{ style: { margin: 10, height: 'calc(100% - 20px)' } }} /> }
+                    map={selectedMap}
+                />
+            </div>
+            <WidgetOptions
+                key="widget-options"
+                data={editorData}
                 onChange={onChange}
-                layers={editorData.map && editorData.map.layers}
-                map={editorData.map}
-                env={env}
-                options={{ style: { margin: 10, height: 'calc(100% - 20px)' } }} /> }
-            map={editorData.map}
-        />
-        <WidgetOptions
-            key="widget-options"
-            data={editorData}
-            onChange={onChange}
-        />
-    </Wizard>);
+            />
+
+        </Wizard>);
+};

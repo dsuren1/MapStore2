@@ -1803,7 +1803,7 @@
                     "backToPreview": "Back to Preview",
                     "backToChartOptions": "Back to chart options",
                     "selectALayer": "Select a layer",
-                    "selectAMap": "Select a map",
+                    "selectAMap": "Select one or more maps",
                     "configureChartOptions": "Configure chart options",
                     "configureWidgetOptions": "Configure widget options",
                     "backToTableOptions": "Back to table options",
@@ -1814,6 +1814,7 @@
                     "titlePlaceholder": "Insert title...",
                     "textPlaceholder": "Insert text...",
                     "useThisMap": "Use this map",
+                    "useTheseMap": "Use these maps",
                     "configureMapOptions": "Configure map options",
                     "enableIdentifyTool": "Enable identify tool",
                     "disableIdentifyTool": "Disable identify tool",
@@ -1877,6 +1878,11 @@
                     "unhide": "Unhide",
                     "unhideDescription": "Unhide the widget to other users"
                 }
+            },
+            "mapSwitcher": {
+                "noResults": "No map found",
+                "formLabel": "Enter a map name",
+                "selectLabel": "Select a map"
             },
             "chartType": {
                 "bar": {

@@ -7,7 +7,7 @@
  */
 import Rx from 'rxjs';
 
-import { NEW, INSERT, EDIT, OPEN_FILTER_EDITOR, editNewWidget, onEditorChange } from '../actions/widgets';
+import { NEW, INSERT, EDIT, OPEN_FILTER_EDITOR, editNewWidget, onEditorChange} from '../actions/widgets';
 
 import {
     setEditing,
@@ -22,7 +22,6 @@ import {
     LOAD_DASHBOARD,
     dashboardLoadError
 } from '../actions/dashboard';
-
 import { setControlProperty, TOGGLE_CONTROL } from '../actions/controls';
 import { featureTypeSelected } from '../actions/wfsquery';
 import { show, error } from '../actions/notifications';
@@ -35,6 +34,7 @@ import { pathnameSelector } from '../selectors/router';
 import { createResource, updateResource, getResource } from '../api/persistence';
 import { wrapStartStop } from '../observables/epics';
 import { LOCATION_CHANGE, push } from 'connected-react-router';
+import { convertDependenciesMappingForCompatibility } from "../utils/WidgetsUtils";
 const getFTSelectedArgs = (state) => {
     let layer = getEditingWidgetLayer(state);
     let url = layer.search && layer.search.url;
@@ -113,12 +113,13 @@ export const filterAnonymousUsersForDashboard = (actions$, store) => actions$
     .switchMap( ({}) => {
         return !isLoggedIn(store.getState()) ? Rx.Observable.of(dashboardLoadError({status: 403})) : Rx.Observable.empty();
     });
+
 // dashboard loading from resource ID.
 export const loadDashboardStream = (action$, {getState = () => {}}) => action$
     .ofType(LOAD_DASHBOARD)
     .switchMap( ({id}) =>
         getResource(id)
-            .map(({ data, ...resource }) => dashboardLoaded(resource, data))
+            .map(({ data, ...resource }) => dashboardLoaded(resource, convertDependenciesMappingForCompatibility(data)))
             .let(wrapStartStop(
                 dashboardLoading(true, "loading"),
                 dashboardLoading(false, "loading"),

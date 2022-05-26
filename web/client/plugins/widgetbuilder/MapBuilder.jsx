@@ -38,7 +38,7 @@ const chooseMapEnhancer = compose(
     }),
     // map selector
     branch(
-        ({ editorData = {} } = {}) => !editorData.map,
+        ({ editorData = {} } = {}) => !editorData.maps,
         renderComponent(MapSelector)
     ),
     // layer selector - to add layers to the map
@@ -65,7 +65,8 @@ const chooseMapEnhancer = compose(
             glyph: 'arrow-left',
             onClick: () => {
                 // options will not be valid anymore in case of layer change
-                onResetChange("map", undefined);
+                onResetChange("maps", undefined);
+                onResetChange("selectedMapId", undefined);
             }
         }
     }))
@@ -81,7 +82,7 @@ const Builder = connect(
 const mapBuilder = compose(
     chooseMapEnhancer,
     withProps(({ editorData = {}}) => ({
-        map: editorData.map
+        maps: editorData.maps
     })),
     mapBuilderConnectMask,
     handleNodeSelection,

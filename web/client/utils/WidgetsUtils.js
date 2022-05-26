@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { get, find, isNumber, round } from 'lodash';
+import { get, find, isNumber, round, findIndex, includes, isEmpty, cloneDeep, omit, castArray} from 'lodash';
 
-import { WIDGETS_REGEX } from '../actions/widgets';
+import { MAPS_REGEX, WIDGET_MAPS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
 import { findGroups } from './GraphUtils';
 import { sameToneRangeColors } from './ColorUtils';
+import uuidv1 from "uuid/v1";
 
 export const getDependentWidget = (k, widgets) => {
     const [match, id] = WIDGETS_REGEX.exec(k);
@@ -21,9 +22,21 @@ export const getDependentWidget = (k, widgets) => {
     return null;
 };
 
-export const getWidgetDependency = (k, widgets) => {
+export const getMapDependencyPath = (k, widgetId, widgetMaps) => {
+    let [match, mapId] = MAPS_REGEX.exec(k) || [];
+    const { maps } = find(widgetMaps, {id: widgetId}) || {};
+    if (match && !isEmpty(maps)) {
+        const index = findIndex(maps, { mapId });
+        return match.replace(mapId, index);
+    }
+    return k;
+};
+
+export const getWidgetDependency = (k, widgets, maps) => {
     const regRes = WIDGETS_REGEX.exec(k);
-    const rest = regRes && regRes[2];
+    let rest = regRes && regRes[2];
+    const widgetId = regRes[1];
+    rest = getMapDependencyPath(rest, widgetId, maps);
     const widget = getDependentWidget(k, widgets);
     return rest
         ? get(widget, rest)
@@ -113,4 +126,70 @@ export const getDefaultAggregationOperations = () => {
         { value: "Min", label: "widgets.operations.MIN"},
         { value: "Max", label: "widgets.operations.MAX"}
     ];
+};
+
+export const convertDependenciesMappingForCompatibility = (data) => {
+    const mapDependencies = ["layers", "viewport", "zoom", "center"];
+    const _data = cloneDeep(data);
+    const widgets = _data.widgets || {};
+    const tempWidgetMapDependency = [];
+    return {
+        ..._data,
+        widgets: widgets.map(w => {
+            let widget = {...w};
+            if (w.widgetType === 'map' && w.map) {
+                const mapId = uuidv1();
+                widget = omit({...w, selectedMapId: mapId, maps: castArray({...w.map, mapId})}, 'map');
+                tempWidgetMapDependency.push({widgetId: widget.id, mapId});
+            }
+            if (!isEmpty(widget.dependenciesMap)) {
+                const widgetPath = Object.values(widget.dependenciesMap)[0];
+                const [, dependantWidgetId] = WIDGETS_REGEX.exec(widgetPath) || [];
+                const {widgetId, mapId} = find(tempWidgetMapDependency, {widgetId: dependantWidgetId}) || {};
+                if (widgetId) {
+                    return {
+                        ...widget,
+                        dependenciesMap: Object.keys(widget.dependenciesMap).filter(k => widget.dependenciesMap[k] !== undefined).reduce((dm, k) => {
+                            if (includes(mapDependencies, k)) {
+                                return {
+                                    ...dm,
+                                    [k]: widget.dependenciesMap[k].replace(".map.", `.maps[${mapId}].`)
+                                };
+                            }
+                            return {...dm, [k]: widget.dependenciesMap[k]};
+                        }, {})
+                    };
+                }
+            }
+            return widget;
+        })
+    };
+};
+
+export const updateDependenciesMapOfMapList = (allWidgets = [], widgetId, selectedMapId) => {
+    let widgets = [...allWidgets];
+    const widgetsWithDependenciesMaps = widgets.filter(t => t.dependenciesMap);
+    const isUpdateNeeded = widgetsWithDependenciesMaps.some(t => Object.values(t.dependenciesMap).some(td => (WIDGETS_REGEX.exec(td) || [])[1] === widgetId));
+    if (isUpdateNeeded) {
+        widgets = widgets.map(widget => {
+            const dependenciesMap = widget.dependenciesMap;
+            const modWidgetId = !isEmpty(dependenciesMap) && (WIDGETS_REGEX.exec(Object.values(dependenciesMap)[0]) || [])[1];
+            return {
+                ...widget,
+                ...(!isEmpty(dependenciesMap) && modWidgetId === widgetId && {
+                    dependenciesMap: Object.keys(dependenciesMap).reduce((dm, k) => {
+                        const mapIdToReplace = (WIDGET_MAPS_REGEX.exec(dependenciesMap[k]) || [])[1];
+                        if (mapIdToReplace) {
+                            return {
+                                ...dm,
+                                [k]: dependenciesMap[k].replace(mapIdToReplace, selectedMapId)
+                            };
+                        }
+                        return {...dm, [k]: dependenciesMap[k]};
+
+                    }, {})})
+            };
+        });
+    }
+    return widgets;
 };

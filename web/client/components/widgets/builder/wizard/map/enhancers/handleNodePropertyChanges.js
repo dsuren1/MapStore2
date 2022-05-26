@@ -32,7 +32,7 @@ export default withHandlers({
                 const index = findIndex(map.layers || [], {
                     id
                 });
-                onChange(`map.layers[${index}].${key}`, value);
+                onChange(`maps[${map.mapId}].layers[${index}].${key}`, value);
             },
     /**
      * Change layer properties by group
@@ -45,12 +45,12 @@ export default withHandlers({
                     .filter(belongsToGroup(gid))
                     .map(({ id } = {}) => findIndex(map.layers || [], { id }))
                     .filter(i => i >= 0)
-                    .map(index => onChange(`map.layers[${index}].${key}`, value)),
+                    .map(index => onChange(`maps[${map.mapId}].layers[${index}].${key}`, value)),
     /**
      * Change group properties (expanded...)
      */
     changeGroupProperty:
-        ({ onChange = () => { }, map = [] }) =>
+        ({ onChange = () => { }, map = {} }) =>
             (id, key, value) => {
 
                 const EXPANDED = 'expanded';
@@ -61,9 +61,9 @@ export default withHandlers({
 
                 if (key === EXPANDED && !groups?.[correctGroupIndex]?.id) {
                     // add id if missing
-                    onChange(`map.groups[${correctGroupIndex}].id`, id);
+                    onChange(`maps[${map.mapId}].groups[${correctGroupIndex}].id`, id);
                 }
-                onChange(`map.groups[${correctGroupIndex}].${key}`, value);
+                onChange(`maps[${map.mapId}].groups[${correctGroupIndex}].${key}`, value);
             },
-    updateMapEntries: ({ onChange = () => { } }) => (obj = {}) => Object.keys(obj).map(k => onChange(`map[${k}]`, obj[k]))
+    updateMapEntries: ({ onChange = () => { }, map = {} }) => (obj = {}) => Object.keys(obj).map(k => onChange(`maps[${map.mapId}][${k}]`, obj[k]))
 });
