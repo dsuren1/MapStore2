@@ -12,7 +12,7 @@ import WMSLegend from '../../TOC/fragments/WMSLegend';
 import OpacitySlider from "../../TOC/fragments/OpacitySlider";
 import Title from "../../TOC/fragments/Title";
 import LayersTool from "../../TOC/fragments/LayersTool";
-import { WIDGET_MAPS_REGEX } from "../../../actions/widgets";
+import { WIDGETS_MAPS_REGEX } from "../../../actions/widgets";
 
 export default ({
     layers = [],
@@ -31,7 +31,7 @@ export default ({
 
     const onUpdateProperty = (lProp, value, lId) => {
         if (dependencyMapPath) {
-            const [, mapId] = WIDGET_MAPS_REGEX.exec(dependencyMapPath) || [];
+            const [,, mapId] = WIDGETS_MAPS_REGEX.exec(dependencyMapPath) || [];
             if (mapId) {
                 const _layers = allLayers.map((l) => l.id === lId ? {...l, [lProp]: value} : l);
                 updateProperty("maps", {mapId, layers: _layers}, 'merge');

@@ -8,7 +8,7 @@
 
 import { get, find, isNumber, round, findIndex, includes, isEmpty, cloneDeep, omit, castArray} from 'lodash';
 
-import { MAPS_REGEX, WIDGET_MAPS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
+import { MAPS_REGEX, WIDGETS_MAPS_REGEX, WIDGETS_REGEX } from '../actions/widgets';
 import { findGroups } from './GraphUtils';
 import { sameToneRangeColors } from './ColorUtils';
 import uuidv1 from "uuid/v1";
@@ -178,7 +178,7 @@ export const updateDependenciesMapOfMapList = (allWidgets = [], widgetId, select
                 ...widget,
                 ...(!isEmpty(dependenciesMap) && modWidgetId === widgetId && {
                     dependenciesMap: Object.keys(dependenciesMap).reduce((dm, k) => {
-                        const mapIdToReplace = (WIDGET_MAPS_REGEX.exec(dependenciesMap[k]) || [])[1];
+                        const [,, mapIdToReplace] = WIDGETS_MAPS_REGEX.exec(dependenciesMap[k]) || [];
                         if (mapIdToReplace) {
                             return {
                                 ...dm,

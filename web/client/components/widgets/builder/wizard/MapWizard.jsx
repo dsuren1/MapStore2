@@ -14,6 +14,8 @@ import WidgetOptions from './common/WidgetOptions';
 import MapOptions from './map/MapOptions';
 import Preview from './map/PreviewMap';
 import MapSwitcher from "../wizard/map/MapSwitcher";
+import EmptyView from '../../../misc/EmptyView';
+import Message from "../../../I18N/Message";
 const Wizard = wizardHandlers(WizardContainer);
 
 export default ({
@@ -29,6 +31,7 @@ export default ({
     env
 } = {}) => {
     const [selectedMap, setSelectedMap] = useState({});
+    const [emptyMap, setEmptyMap] = useState(false);
     return (
         <Wizard
             step={step}
@@ -36,15 +39,22 @@ export default ({
             onFinish={onFinish}
             hideButtons>
             <div>
+                {emptyMap && <EmptyView
+                    glyph={"1-map"}
+                    title={<Message msgId="widgets.selectMap.emptyMap.title" />}
+                    description={<Message msgId="widgets.selectMap.emptyMap.noNameDescription" />}
+                />}
                 <MapSwitcher
                     editorData={editorData}
                     onChange={onChange}
                     value={editorData.selectedMapId}
                     setSelectedMap={setSelectedMap}
                     selectedMap={selectedMap}
+                    setEmptyMap={setEmptyMap}
+                    emptyMap={emptyMap}
                     withContainer
                 />
-                <MapOptions
+                {!emptyMap && <MapOptions
                     editNode={editNode}
                     setEditNode={setEditNode}
                     closeNodeEditor={closeNodeEditor}
@@ -60,7 +70,7 @@ export default ({
                         env={env}
                         options={{ style: { margin: 10, height: 'calc(100% - 20px)' } }} /> }
                     map={selectedMap}
-                />
+                />}
             </div>
             <WidgetOptions
                 key="widget-options"

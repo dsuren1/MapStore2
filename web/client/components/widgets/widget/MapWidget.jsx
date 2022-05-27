@@ -36,7 +36,8 @@ export default ({
     dataGrid = {},
     onDelete = () => {},
     headerStyle,
-    env
+    env,
+    selectionActive
 } = {}) => {
     const { size: {height: mapHeight, width: mapWidth} = {}, mapInfoControl } = map;
     const enablePopupTools = mapHeight > 400 && mapWidth > 400 && mapInfoControl;
@@ -48,6 +49,7 @@ export default ({
                 maps={maps}
                 onChange={(...args) => updateProperty(id, ...args)}
                 value={selectedMapId}
+                disabled={selectionActive}
             />,
             ...topRightItems]
         }

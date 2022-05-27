@@ -35,7 +35,7 @@ export const DEFAULT_TARGET = "floating";
 export const DEPENDENCY_SELECTOR_KEY = "dependencySelector";
 export const WIDGETS_REGEX = /^widgets\["?([^"\]]*)"?\]\.?(.*)$/;
 export const MAPS_REGEX = /^maps\["?([^"\]]*)"?\]\.?(.*)$/;
-export const WIDGET_MAPS_REGEX = /^.*maps\["?([^"\]]*)"?\]\.?(.*)$/;
+export const WIDGETS_MAPS_REGEX = /^widgets\["?([^"\]]*)"?\]\.maps\["?([^"\]]*)"?\]\.?(.*)$/;
 
 export const TOGGLE_COLLAPSE = "WIDGET:TOGGLE_COLLAPSE";
 export const TOGGLE_COLLAPSE_ALL = "WIDGET:TOGGLE_COLLAPSE_ALL";

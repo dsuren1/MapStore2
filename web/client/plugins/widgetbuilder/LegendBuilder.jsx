@@ -103,7 +103,7 @@ const builderEnhancer = compose(
                 .filter(({ editorData = {} }) => !editorData.mapSync)
                 .take(1)
                 .distinctUntilChanged()
-                .do(({ toggleConnection = () => { }, availableDependencies }) => toggleConnection(availableDependencies))
+                .do(({ toggleConnection = () => { }, availableDependencies, widgets }) => toggleConnection(availableDependencies, widgets))
                 .ignoreElements()
         )
     )

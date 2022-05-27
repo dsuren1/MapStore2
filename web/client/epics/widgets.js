@@ -15,9 +15,9 @@ import {
     toggleDependencySelector,
     DEPENDENCY_SELECTOR_KEY,
     WIDGETS_REGEX,
-    WIDGET_MAPS_REGEX,
     UPDATE_PROPERTY,
-    replaceWidgets
+    replaceWidgets,
+    WIDGETS_MAPS_REGEX
 } from '../actions/widgets';
 
 import { MAP_CONFIG_LOADED } from '../actions/config';
@@ -180,7 +180,7 @@ export const toggleWidgetConnectFlow = (action$, {getState = () => {}} = {}) =>
                             const ad = get(getDependencySelectorConfig(getState()), 'availableDependencies');
                             let deps = ad.filter(d => (WIDGETS_REGEX.exec(d) || [])[1] === widget.id);
                             if (widget.widgetType === 'map') {
-                                deps = deps.filter(d => (WIDGET_MAPS_REGEX.exec(d) || [])[1] === widget.selectedMapId);
+                                deps = deps.filter(d => (WIDGETS_MAPS_REGEX.exec(d) || [])[2] === widget.selectedMapId);
                             }
                             return configureDependency(active, deps[0], options, widget.dependeciesMap).concat(Rx.Observable.of(toggleDependencySelector(false, {})));
                         }).takeUntil(

@@ -7,13 +7,14 @@
  */
 import React, {useEffect, useState} from 'react';
 import ReactSelect from "react-select";
-import { FormControl, Glyphicon } from "react-bootstrap";
+import { FormControl as FC, Glyphicon } from "react-bootstrap";
 import isEmpty from "lodash/isEmpty";
 import get from "lodash/get";
 
 import localizedProps from "../../../../misc/enhancers/localizedProps";
 import Message from "../../../../I18N/Message";
 import Button from "../../../../misc/Button";
+const FormControl = localizedProps("placeholder")(FC);
 const Select = localizedProps(["noResultsText"])(ReactSelect);
 
 /**
@@ -27,6 +28,8 @@ export default ({
     className = '',
     editorData = {},
     setSelectedMap = () => {},
+    setEmptyMap = () => {},
+    emptyMap = false,
     withContainer = false,
     selectedMap = {}
 }) => {
@@ -56,7 +59,6 @@ export default ({
         return renderMapSwitchSelector(maps);
     }
 
-    const [emptyMap, setEmptyMap] = useState(false);
     const [emptyMapName, setEmptyMapName] = useState('');
     useEffect(() => {
         if (!isEmpty(editorData?.maps) && withContainer) {
@@ -81,37 +83,39 @@ export default ({
         editorData.selectedMapId,
         withContainer,
         setSelectedMap,
-        onChange]
-    );
+        onChange,
+        setEmptyMap
+    ]);
 
     return (emptyMap || editorData.maps?.length > 1)
-        ? (<div className="widget-map-selector">
-            <div className="widget-map-selector-label">
-                <strong>
-                    <Message msgId={`widgets.mapSwitcher.${emptyMap ? "formLabel" : "selectLabel"}`} />
-                </strong>
+        ? <div className="widget-map-selector">
+            {emptyMap ? <div style={{display: 'inline-flex'}}>
+                <FormControl
+                    type="text"
+                    placeholder={"widgets.mapSwitcher.placeholder"}
+                    style={{
+                        textOverflow: "ellipsis"
+                    }}
+                    value={emptyMapName}
+                    onChange={(e) => setEmptyMapName(e.target.value)}/>
+                <Button
+                    bsStyle="primary"
+                    disabled={!emptyMapName}
+                    onClick={() => {
+                        onChange(`maps[${selectedMap.mapId}].name`, emptyMapName);
+                        onChange("selectedMapId", selectedMap.mapId);
+                    }}
+                >
+                    <Glyphicon glyph="ok"/>
+                </Button>
             </div>
-            {emptyMap ?
-                <div style={{ display: 'inline-flex'}}>
-                    <FormControl
-                        type="text"
-                        style={{
-                            textOverflow: "ellipsis"
-                        }}
-                        value={emptyMapName}
-                        onChange={(e) => setEmptyMapName(e.target.value)}/>
-                    <Button
-                        bsStyle="primary"
-                        disabled={!emptyMapName}
-                        onClick={()=> {
-                            onChange(`maps[${selectedMap.mapId}].name`, emptyMapName);
-                            onChange("selectedMapId", selectedMap.mapId);
-                        }}
-                    >
-                        <Glyphicon glyph="ok"/>
-                    </Button>
-                </div>
-                : renderMapSwitchSelector(editorData.maps)
-            }
-        </div>) : null;
+                : (<>
+                    <div className="widget-map-selector-label">
+                        <strong>
+                            <Message msgId={"widgets.mapSwitcher.selectLabel"}/>
+                        </strong>
+                    </div>
+                    {renderMapSwitchSelector(editorData.maps)}
+                </>)}
+        </div> : null;
 };

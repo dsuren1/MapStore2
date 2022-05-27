@@ -1773,7 +1773,8 @@
                 },
                 "emptyMap": {
                     "title": "Empty Map",
-                    "description": "Start from an empty map"
+                    "description": "Start from an empty map",
+                    "noNameDescription": "The selection has an empty map. Add a name to the empty map to proceed with map configuration"
                 }
             },
             "title": "Title",
@@ -1881,7 +1882,7 @@
             },
             "mapSwitcher": {
                 "noResults": "No map found",
-                "formLabel": "Enter a map name",
+                "placeholder": "Enter a map name",
                 "selectLabel": "Select a map"
             },
             "chartType": {

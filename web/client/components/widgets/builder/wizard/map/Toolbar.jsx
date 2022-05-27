@@ -34,22 +34,19 @@ export default ({ step = 0, buttons, tocButtons = [], stepButtons = [], dashBoar
     ...stepButtons,
     {
         onClick: () => onChange(`maps[${editorData?.selectedMapId}].mapInfoControl`, !map?.mapInfoControl),
-        visible: dashBoardEditing && editorData?.widgetType === "map",
-        disabled: isEmptyMap,
+        visible: !isEmptyMap && dashBoardEditing && editorData?.widgetType === "map",
         glyph: "info-sign",
         bsStyle: map?.mapInfoControl ? "success" : "primary",
         tooltipId: map?.mapInfoControl ? "widgets.builder.wizard.disableIdentifyTool" : "widgets.builder.wizard.enableIdentifyTool"
     },
     {
         onClick: () => toggleLayerSelector(true),
-        visible: step === 0,
-        disabled: isEmptyMap,
+        visible: !isEmptyMap && step === 0,
         glyph: "plus",
         tooltipId: "widgets.builder.wizard.addLayer"
     }, {
         onClick: () => setPage(Math.min(step + 1, 2)),
-        visible: step === 0,
-        disabled: isEmptyMap,
+        visible: !isEmptyMap && step === 0,
         glyph: "arrow-right",
         tooltipId: "widgets.builder.wizard.configureWidgetOptions"
     }, {
