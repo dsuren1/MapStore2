@@ -1882,7 +1882,7 @@
             },
             "mapSwitcher": {
                 "noResults": "No map found",
-                "placeholder": "Enter a map name",
+                "placeholder": "Enter map name",
                 "selectLabel": "Select a map"
             },
             "chartType": {
