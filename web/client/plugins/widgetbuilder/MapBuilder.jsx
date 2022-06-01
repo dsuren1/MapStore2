@@ -8,7 +8,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { branch, compose, renderComponent, withHandlers, withProps, withState } from 'recompose';
-
+import find from 'lodash/find';
 import { onEditorChange } from '../../actions/widgets';
 
 import BorderLayout from '../../components/layout/BorderLayout';
@@ -82,7 +82,7 @@ const Builder = connect(
 const mapBuilder = compose(
     chooseMapEnhancer,
     withProps(({ editorData = {}}) => ({
-        maps: editorData.maps
+        map: find(editorData.maps, ({mapId}) => mapId === editorData.selectedMapId) || {}
     })),
     mapBuilderConnectMask,
     handleNodeSelection,

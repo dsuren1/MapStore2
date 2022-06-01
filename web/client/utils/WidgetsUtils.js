@@ -128,6 +128,12 @@ export const getDefaultAggregationOperations = () => {
     ];
 };
 
+/**
+ * Convert the dependenciesMapping to support maplist
+ * widget for compatibility
+ * @param data {object} response from dashboard query
+ * @returns {object} data with updated map widgets
+ */
 export const convertDependenciesMappingForCompatibility = (data) => {
     const mapDependencies = ["layers", "viewport", "zoom", "center"];
     const _data = cloneDeep(data);
@@ -138,7 +144,7 @@ export const convertDependenciesMappingForCompatibility = (data) => {
         widgets: widgets.map(w => {
             let widget = {...w};
             if (w.widgetType === 'map' && w.map) {
-                const mapId = uuidv1();
+                const mapId = uuidv1(); // Add mapId to existing map data
                 widget = omit({...w, selectedMapId: mapId, maps: castArray({...w.map, mapId})}, 'map');
                 tempWidgetMapDependency.push({widgetId: widget.id, mapId});
             }
@@ -149,15 +155,18 @@ export const convertDependenciesMappingForCompatibility = (data) => {
                 if (widgetId) {
                     return {
                         ...widget,
-                        dependenciesMap: Object.keys(widget.dependenciesMap).filter(k => widget.dependenciesMap[k] !== undefined).reduce((dm, k) => {
-                            if (includes(mapDependencies, k)) {
-                                return {
-                                    ...dm,
-                                    [k]: widget.dependenciesMap[k].replace(".map.", `.maps[${mapId}].`)
-                                };
-                            }
-                            return {...dm, [k]: widget.dependenciesMap[k]};
-                        }, {})
+                        // Update dependenciesMap containing `map` as dependency
+                        dependenciesMap: Object.keys(widget.dependenciesMap)
+                            .filter(k => widget.dependenciesMap[k] !== undefined)
+                            .reduce((dm, k) => {
+                                if (includes(mapDependencies, k)) {
+                                    return {
+                                        ...dm,
+                                        [k]: widget.dependenciesMap[k].replace(".map.", `.maps[${mapId}].`)
+                                    };
+                                }
+                                return {...dm, [k]: widget.dependenciesMap[k]};
+                            }, {})
                     };
                 }
             }
@@ -166,6 +175,15 @@ export const convertDependenciesMappingForCompatibility = (data) => {
     };
 };
 
+/**
+ * Update the dependenciesMap of the widgets containing map as dependencies
+ * when a map is changed in the widget via map switcher
+ * widget for compatibility
+ * @param allWidgets {object[]} response from dashboard query
+ * @param widgetId {string} widget id of map list
+ * @param selectedMapId {string} selected map id
+ * @returns {object[]} updated widgets
+ */
 export const updateDependenciesMapOfMapList = (allWidgets = [], widgetId, selectedMapId) => {
     let widgets = [...allWidgets];
     const widgetsWithDependenciesMaps = widgets.filter(t => t.dependenciesMap);
@@ -173,16 +191,16 @@ export const updateDependenciesMapOfMapList = (allWidgets = [], widgetId, select
     if (isUpdateNeeded) {
         widgets = widgets.map(widget => {
             const dependenciesMap = widget.dependenciesMap;
-            const modWidgetId = !isEmpty(dependenciesMap) && (WIDGETS_REGEX.exec(Object.values(dependenciesMap)[0]) || [])[1];
+            const modifiedWidgetId = !isEmpty(dependenciesMap) && (WIDGETS_REGEX.exec(Object.values(dependenciesMap)[0]) || [])[1];
             return {
                 ...widget,
-                ...(!isEmpty(dependenciesMap) && modWidgetId === widgetId && {
+                ...(!isEmpty(dependenciesMap) && modifiedWidgetId === widgetId && {
                     dependenciesMap: Object.keys(dependenciesMap).reduce((dm, k) => {
                         const [,, mapIdToReplace] = WIDGETS_MAPS_REGEX.exec(dependenciesMap[k]) || [];
                         if (mapIdToReplace) {
                             return {
                                 ...dm,
-                                [k]: dependenciesMap[k].replace(mapIdToReplace, selectedMapId)
+                                [k]: dependenciesMap[k].replace(mapIdToReplace, selectedMapId) // Update map id of the dependenciesMap
                             };
                         }
                         return {...dm, [k]: dependenciesMap[k]};

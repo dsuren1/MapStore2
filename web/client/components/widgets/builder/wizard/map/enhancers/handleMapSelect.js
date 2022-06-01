@@ -10,17 +10,19 @@ import { compose, withState, mapPropsStream, withHandlers } from 'recompose';
 
 import axios from '../../../../../../libs/ajax';
 import ConfigUtils from '../../../../../../utils/ConfigUtils';
-import { excludeGoogleBackground, extractTileMatrixFromSources, normalizeMap } from '../../../../../../utils/LayersUtils';
+import { excludeGoogleBackground, extractTileMatrixFromSources } from '../../../../../../utils/LayersUtils';
+import { EMPTY_MAP } from "../../../../../../utils/MapUtils";
 import { getResource } from '../../../../../../api/persistence';
 import '../../../../../../libs/bindings/rxjsRecompose';
 import uuidv1 from 'uuid/v1';
+import castArray from 'lodash/castArray';
 
 const handleMapSelect = compose(
     withState('selected', "setSelected", null),
     withHandlers({
-        onMapChoice: ({ onMapSelected = () => { }, selectedSource = {}, includeMapId = false } = {}) => maps => {
+        onMapChoice: ({ onMapSelected = () => { }, selectedSource = {}, includeMapId = false } = {}) => (maps = []) => {
             return axios.all(
-                maps.map(map =>
+                castArray(maps).map(map =>
                     (typeof map.id === 'string'
                         ? axios.get(map.id).then(response => response.data)
                         : getResource(map.id, {baseURL: selectedSource.baseURL, includeAttributes: false})
@@ -30,7 +32,7 @@ const handleMapSelect = compose(
                         let mapState = (!config.version && typeof map.id !== 'string') ? ConfigUtils.convertFromLegacy(config) : ConfigUtils.normalizeConfig(config.map);
                         return {
                             mapId: uuidv1(),
-                            name: map.name,
+                            name: typeof map.id === 'string' ? EMPTY_MAP : map.name,
                             ...(mapState && mapState.map || {}),
                             ...(includeMapId ? {id: map.id} : {}),
                             groups: mapState && mapState.groups || [],
@@ -49,7 +51,7 @@ const handleMapSelect = compose(
                         }) : res.layers;
                         return {...res, mapInfoControl: true}; // enable identify tool on map widgets
                     }))
-            ).then((results)=> onMapSelected({ maps: results.map(map => normalizeMap(map)) }));
+            ).then((results)=> onMapSelected({ maps: results }));
         }
     }),
     mapPropsStream(props$ =>

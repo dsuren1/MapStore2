@@ -14,6 +14,7 @@ import get from "lodash/get";
 import localizedProps from "../../../../misc/enhancers/localizedProps";
 import Message from "../../../../I18N/Message";
 import Button from "../../../../misc/Button";
+import { EMPTY_MAP } from "../../../../../utils/MapUtils";
 const FormControl = localizedProps("placeholder")(FC);
 const Select = localizedProps(["noResultsText"])(ReactSelect);
 
@@ -38,7 +39,7 @@ export default ({
             return null;
         }
         return (<Select
-            style={{width: 180}}
+            style={{width: 200}}
             className={className}
             disabled={disabled}
             noResultsText="widgets.mapSwitcher.noResults"
@@ -62,11 +63,11 @@ export default ({
     const [emptyMapName, setEmptyMapName] = useState('');
     useEffect(() => {
         if (!isEmpty(editorData?.maps) && withContainer) {
-            const containsEmptyMap =  editorData?.maps?.some(map => isEmpty(map.name));
+            const emptyMapData =  editorData?.maps?.find(map => map.name === EMPTY_MAP);
             let selected;
-            if (containsEmptyMap) {
+            if (!isEmpty(emptyMapData)) {
                 setEmptyMap(true);
-                selected = editorData.maps?.find(map => isEmpty(map.name));
+                selected = emptyMapData;
             } else {
                 setEmptyMap(false);
                 selected = get(editorData, 'maps[0]', {});
@@ -91,6 +92,7 @@ export default ({
         ? <div className="widget-map-selector">
             {emptyMap ? <div style={{display: 'inline-flex'}}>
                 <FormControl
+                    className={"widget-empty-map"}
                     type="text"
                     placeholder={"widgets.mapSwitcher.placeholder"}
                     style={{

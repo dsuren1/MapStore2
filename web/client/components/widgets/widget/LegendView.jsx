@@ -66,12 +66,12 @@ export default ({
                     node={layer}
                     tooltip="toc.displayLegendAndTools"
                     key="toollegend"
-                    className={`toc-legend ${layer.expanded ? 'expanded' : ''}`}
+                    className={`toc-legend-icon ${layer.expanded ? 'expanded' : ''}`}
                     glyph="chevron-left"
                     onClick={()=> onUpdateProperty('expanded', !layer.expanded, layer.id)} />}
                 {!layer.expanded && renderOpacitySlider(layer)}
             </div>
-            {(layer.expanded || legendExpanded) ? <div key="legend" className="collapsible-toc">
+            {(layer.expanded || legendExpanded) ? <div key="legend" className="expanded-legend-view">
                 <Grid fluid>
                     <Row>
                         <Col xs={12}>

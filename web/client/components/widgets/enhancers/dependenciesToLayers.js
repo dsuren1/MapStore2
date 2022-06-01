@@ -19,7 +19,7 @@ import { composeFilterObject } from './utils';
  */
 export default compose(
     withPropsOnChange(
-        ({mapSync, dependencies = {}, maps = {}, selectedMapId } = {}, nextProps = {}, filter) =>
+        ({mapSync, dependencies = {}, maps = [], selectedMapId } = {}, nextProps = {}, filter) =>
             mapSync !== nextProps.mapSync
             || !isEqual(dependencies, nextProps.dependencies)
             || !isEqual(maps, nextProps.maps)

@@ -61,7 +61,9 @@ export default ({
             loading={loading}
             onItemClick={({ map } = {}, props, event) => {
                 if (event.ctrlKey) {
-                    return onSelected(castArray(selected).concat(map));
+                    return onSelected(isEmpty(selected)
+                        ? castArray(map)
+                        : castArray(selected).concat(map));
                 }
                 return onSelected(castArray(map));
             }} />

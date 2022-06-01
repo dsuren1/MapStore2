@@ -151,7 +151,7 @@ export const dependenciesSelector = createShallowSelector(
         k.indexOf("map.") === 0
             ? get(mapSelector(state), k.slice(4))
             : k.match(WIDGETS_REGEX)
-                ? getWidgetDependency(k, getFloatingWidgets(state), getMapWidgets(state))   // TODO Modify here
+                ? getWidgetDependency(k, getFloatingWidgets(state), getMapWidgets(state))
                 : get(state, k) ),
     // iterate the dependencies keys to set the dependencies values in a map
     (map, keys, values) => keys.reduce((acc, k, i) => ({

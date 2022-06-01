@@ -131,16 +131,14 @@ function widgetsReducer(state = emptyState, action) {
         const oldWidget = find(get(state, `containers[${action.target}].widgets`), {
             id: action.id
         });
-        let value = [];
-        const isMerge = action.mode === "merge";
-        const isKeyMap = action.key === "maps";
-        if (isKeyMap && isMerge) {
-            value = oldWidget.maps.map(m => m.mapId === action.value?.mapId ? {...m, ...action?.value} : m);
-        }
         return arrayUpsert(`containers[${action.target}].widgets`,
             set(
                 action.key,
-                isMerge ? isKeyMap ? value : assign({}, oldWidget[action.key], action.value) : action.value,
+                action.mode === "merge"
+                    ? action.key === "maps"
+                        ? oldWidget.maps.map(m => m.mapId === action.value?.mapId ? {...m, ...action?.value} : m)
+                        : assign({}, oldWidget[action.key], action.value)
+                    : action.value,
                 oldWidget
             ), {
                 id: action.id
