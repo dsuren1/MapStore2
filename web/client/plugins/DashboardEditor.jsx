@@ -42,7 +42,7 @@ const Builder =
  * @prop {object} cfg.catalog **Deprecated** in favor of `cfg.services`. Can contain a catalog configuration
  * @prop {object} cfg.services Object with the catalogs available to select layers for maps, charts and tables. The format is the same of the `Catalog` plugin.
  * @prop {string} cfg.selectedService the key of service selected by default from the list of `cfg.services`
- * @prop {string} cfg.servicePermission object with permission properties to manage catalog service. Configurations are `editingAllowedRoles` & `editingAllowedGroups`. By default `editingAllowedRoles: ["ADMIN"]`
+ * @prop {string} cfg.servicesPermission object with permission properties to manage catalog service. Configurations are `editingAllowedRoles` & `editingAllowedGroups`. By default `editingAllowedRoles: ["ADMIN"]`
  * @prop {boolean} cfg.disableEmptyMap disable empty map entry from the available maps of map widget
  */
 class DashboardEditorComponent extends React.Component {
@@ -63,7 +63,7 @@ class DashboardEditorComponent extends React.Component {
         pluginCfg: PropTypes.object,
         catalog: PropTypes.object,
         disableEmptyMap: PropTypes.bool,
-        servicePermission: PropTypes.object
+        servicesPermission: PropTypes.object
     };
     static defaultProps = {
         id: "dashboard-editor",
@@ -77,12 +77,12 @@ class DashboardEditorComponent extends React.Component {
         onMount: () => { },
         onUnmount: () => { },
         setEditing: () => { },
-        servicePermission: {
+        servicesPermission: {
             editingAllowedRoles: ["ALL"]
         }
     };
     componentDidMount() {
-        this.props.onInit({ servicePermission: this.props.servicePermission });
+        this.props.onInit({ servicesPermission: this.props.servicesPermission });
         this.props.onMount();
     }
 

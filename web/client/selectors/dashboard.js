@@ -32,8 +32,8 @@ export const dashboardSaveServiceSelector =  state => state.dashboard?.saveServi
 export const dashboardResourceInfoSelector = state => get(state, "dashboard.resource");
 export const dashbaordInfoDetailsUriFromIdSelector = state => state?.dashboard?.resource?.attributes?.details;
 export const dashboardInfoDetailsSettingsFromIdSelector = state => get(dashboardResource(state), "attributes.detailsSettings");
-export const editingAllowedRolesSelector = state => get(state, "dashboard.servicePermission.editingAllowedRoles", []);
-export const editingAllowedGroupsSelector = state => get(state, "dashboard.servicePermission.editingAllowedGroups", []);
+export const editingAllowedRolesSelector = state => get(state, "dashboard.servicesPermission.editingAllowedRoles", []);
+export const editingAllowedGroupsSelector = state => get(state, "dashboard.servicesPermission.editingAllowedGroups", []);
 export const canEditServiceSelector = state => {
     const allowedRoles = editingAllowedRolesSelector(state);
     const allowedGroups = editingAllowedGroupsSelector(state);

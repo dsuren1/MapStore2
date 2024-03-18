@@ -154,7 +154,7 @@ describe('dashboard selectors', () => {
         it('test ADMIN role ', () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: ['ADMIN'],
                         editingAllowedGroups: []
                     }
@@ -170,7 +170,7 @@ describe('dashboard selectors', () => {
         it("test ALL user role", () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: ['ALL'],
                         editingAllowedGroups: []
                     }
@@ -186,7 +186,7 @@ describe('dashboard selectors', () => {
         it("test custom user role", () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: ['ROLE1'],
                         editingAllowedGroups: []
                     }
@@ -202,7 +202,7 @@ describe('dashboard selectors', () => {
         it("test user role not matching", () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: ['ADMIN'],
                         editingAllowedGroups: []
                     }
@@ -218,7 +218,7 @@ describe('dashboard selectors', () => {
         it("test group matching", () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: [],
                         editingAllowedGroups: ['group1']
                     }
@@ -240,7 +240,7 @@ describe('dashboard selectors', () => {
         it("test group not matching", () => {
             const canEdit = canEditServiceSelector({
                 dashboard: {
-                    servicePermission: {
+                    servicesPermission: {
                         editingAllowedRoles: [],
                         editingAllowedGroups: ['group1']
                     }
