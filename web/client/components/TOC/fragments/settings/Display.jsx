@@ -38,6 +38,8 @@ export default class extends React.Component {
         isLocalizedLayerStylesEnabled: PropTypes.bool,
         isCesiumActive: PropTypes.bool,
         projection: PropTypes.string,
+        mapSize: PropTypes.object,
+        mapBbox: PropTypes.object,
         resolutions: PropTypes.array,
         zoom: PropTypes.number,
         hideInteractiveLegendOption: PropTypes.bool
@@ -324,6 +326,9 @@ export default class extends React.Component {
                                             this.useLegendOptions() && this.state.legendOptions.legendWidth || undefined}
                                         language={
                                             this.props.isLocalizedLayerStylesEnabled ? this.props.currentLocaleLanguage : undefined}
+                                        projection={this.props.projection}
+                                        mapSize={this.props.mapSize || this.props.map?.size}
+                                        mapBbox={this.props.mapBbox || this.props.map?.bbox}
                                     /> :
                                     <Legend
                                         style={this.setOverFlow() && {} || undefined}
@@ -334,6 +339,9 @@ export default class extends React.Component {
                                             this.useLegendOptions() && this.state.legendOptions.legendWidth || undefined}
                                         language={
                                             this.props.isLocalizedLayerStylesEnabled ? this.props.currentLocaleLanguage : undefined}
+                                        projection={this.props.projection}
+                                        mapSize={this.props.mapSize || this.props.map?.size}
+                                        mapBbox={this.props.mapBbox || this.props.map?.bbox}
                                     />}
                             </div>
                         </Col>

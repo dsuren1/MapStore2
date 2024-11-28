@@ -40,7 +40,10 @@ class WMSLegend extends React.Component {
         language: PropTypes.string,
         legendWidth: PropTypes.number,
         legendHeight: PropTypes.number,
-        onChange: PropTypes.func
+        onChange: PropTypes.func,
+        projection: PropTypes.string,
+        mapSize: PropTypes.object,
+        mapBbox: PropTypes.object
     };
 
     static defaultProps = {
@@ -95,6 +98,9 @@ class WMSLegend extends React.Component {
                         legendOptions={this.props.WMSLegendOptions}
                         scaleDependent={this.props.scaleDependent}
                         language={this.props.language}
+                        projection={this.props.projection}
+                        mapSize={this.props.mapSize}
+                        mapBbox={this.props.mapBbox}
                     />
                 </div>
             );
@@ -125,6 +131,9 @@ class WMSLegend extends React.Component {
                         scaleDependent={this.props.scaleDependent}
                         language={this.props.language}
                         onChange={this.props.onChange}
+                        projection={this.props.projection}
+                        mapSize={this.props.mapSize}
+                        mapBbox={this.props.mapBbox}
                     />
                 </div>
             );

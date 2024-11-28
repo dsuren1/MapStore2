@@ -35,6 +35,9 @@ function WidgetTOC({
                 visualizationMode: map?.visualizationMode,
                 layerOptions: {
                     legendOptions: {
+                        projection: map?.projection,
+                        mapSize: map?.mapSize,
+                        mapBbox: map?.bbox,
                         WMSLegendOptions: 'forceLabels:on',
                         scaleDependent: true,
                         legendWidth: 12,

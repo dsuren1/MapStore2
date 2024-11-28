@@ -132,7 +132,7 @@ export function printTransformerAdded(name) {
     };
 }
 
-export function configurePrintMap(center, zoom, scaleZoom, scale, layers, projection, currentLocale, useFixedScales) {
+export function configurePrintMap(center, zoom, scaleZoom, scale, layers, projection, currentLocale, useFixedScales, bbox) {
     return {
         type: CONFIGURE_PRINT_MAP,
         center,
@@ -142,7 +142,8 @@ export function configurePrintMap(center, zoom, scaleZoom, scale, layers, projec
         layers,
         projection,
         currentLocale,
-        useFixedScales
+        useFixedScales,
+        bbox
     };
 }
 
