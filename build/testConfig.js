@@ -31,6 +31,7 @@ module.exports = ({browsers = [ 'ChromeHeadless' ], files, path, testFile, singl
     },
     plugins: [
         require('karma-chrome-launcher'),
+        require('karma-opera-launcher'),
         'karma-webpack',
         'karma-mocha',
         'karma-mocha-reporter',
@@ -147,7 +148,8 @@ module.exports = ({browsers = [ 'ChromeHeadless' ], files, path, testFile, singl
             alias: assign({}, {
                 // next libs are added because of this issue https://github.com/geosolutions-it/MapStore2/issues/4569
                 proj4: '@geosolutions/proj4',
-                "react-joyride": '@geosolutions/react-joyride'
+                "react-joyride": '@geosolutions/react-joyride',
+                stream: 'stream-browserify'
             }, alias),
             extensions: ['.js', '.json', '.jsx']
         },
@@ -171,5 +173,8 @@ module.exports = ({browsers = [ 'ChromeHeadless' ], files, path, testFile, singl
     },
     webpackServer: {
         noInfo: true
-    }
+    },
+    captureTimeout: 60000,
+    browserDisconnectTimeout: 60000,
+    browserDisconnectTolerance: 3
 });

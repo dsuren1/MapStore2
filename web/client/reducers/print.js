@@ -98,7 +98,8 @@ function print(state = {spec: initialSpec, capabilities: null, map: null, isLoad
                 layers,
                 size: action.size ?? state.map?.size,
                 projection: action.projection,
-                useFixedScales: action.useFixedScales
+                useFixedScales: action.useFixedScales,
+                bbox: action.mapBbox
             },
             error: null
         }

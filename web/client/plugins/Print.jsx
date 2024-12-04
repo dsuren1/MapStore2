@@ -588,15 +588,10 @@ export default {
                             const scales = getPrintScales(capabilities);
                             const printMapScales = getScales(printSrs);
                             const scaleZoom = getNearestZoom(zoom, scales, printMapScales);
-                            if (useFixedScales) {
-                                const scale = scales[scaleZoom];
-                                configurePrintMapProp(newMap.center, zoom, scaleZoom, scale,
-                                    layers, newMap.projection, currentLocale, useFixedScales);
-                            } else {
-                                const scale = printMapScales[zoom];
-                                configurePrintMapProp(newMap.center, zoom, scaleZoom, scale,
-                                    layers, newMap.projection, currentLocale, useFixedScales);
-                            }
+                            const bbox = newMap.bbox;
+                            const scale = useFixedScales ? scales[scaleZoom] : printMapScales[zoom];
+                            configurePrintMapProp(newMap.center, zoom, scaleZoom, scale,
+                                layers, newMap.projection, currentLocale, useFixedScales, bbox);
                         }
                     };
 
