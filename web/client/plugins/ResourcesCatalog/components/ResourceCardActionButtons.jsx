@@ -58,7 +58,7 @@ function ResourceCardActionButtons({
                     variant="default"
                     size="xs"
                     noCaret
-                    className="_border-transparent"
+                    className="_border-transparent square-button-md"
                 >
                     <Glyphicon glyph="option-vertical" />
                 </Dropdown.Toggle>
