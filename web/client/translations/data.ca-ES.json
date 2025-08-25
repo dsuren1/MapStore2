@@ -4384,6 +4384,30 @@
       "documentation": "Documentaci\u00f3",
       "filterApplied": "Filtre aplicat",
       "emptyFilterItems": "No hi ha elements per mostrar"
+    },
+    "isochrone": {
+      "title": "Isochrone",
+      "tooltip": "Isochrone",
+      "modeTooltip": "Escolliu un mode de viatge per a la ruta",
+      "clickOnMap": "Feu clic a la carta per seleccionar un lloc",
+      "searching": "Cerca en curs...",
+      "noResultsFound": "No s'ha trobat cap resultat",
+      "searchByLocationName": "Cerca per nom de lloc...",
+      "mode": "Mode de viatge",
+      "rangeBy": "Rang per",
+      "departure": "Departament",
+      "arrival": "Arribada",
+      "direction": "Direcci\u00f3",
+      "reset": "Restablir",
+      "run": "Executar",
+      "buckets": "C\u00b7bucs",
+      "exportAsGeoJSON": "Exportar com a GeoJSON",
+      "addAsLayer": "Afegir com a capa",
+      "notification": {
+        "error": "Error d'Isochrone",
+        "errorIsochroneError": "S'ha produ\u00eft un error en calcular l'is\u00f2cron. Si us plau, torneu-ho a provar...",
+        "infoLayerAdded": "Isochrone capa afegida"
+      }
     }
   }
 }

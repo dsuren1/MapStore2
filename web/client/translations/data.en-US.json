@@ -986,7 +986,11 @@
         "showTooltipActive": "Show advanced filters (active)",
         "hideTooltip": "Hide advanced filters",
         "hideTooltipActive": "Hide advanced filters (active)"
-      }
+      },
+      "addDestination": "Add destination",
+      "searchByLocationName": "Search by location name",
+      "searching": "Searching...",
+      "noResultsFound": "No results found"
     },
     "draw": {
       "fill": "Fill",
@@ -4516,6 +4520,30 @@
       "documentation": "Documentation",
       "filterApplied": "Filter applied",
       "emptyFilterItems": "No items to display"
+    },
+    "isochrone": {
+      "title": "Isochrone",
+      "tooltip": "Isochrone",
+      "modeTooltip": "Choose a travel mode for the itinerary",
+      "clickOnMap": "Click on map to select a location",
+      "searching": "Searching...",
+      "noResultsFound": "No results found",
+      "searchByLocationName": "Search by location name...",
+      "mode": "Travel Mode",
+      "rangeBy": "Range by",
+      "departure": "Departure",
+      "arrival": "Arrival",
+      "direction": "Direction",
+      "reset": "Reset",
+      "run": "Run",
+      "buckets": "Buckets",
+      "exportAsGeoJSON": "Export as GeoJSON",
+      "addAsLayer": "Add as layer",
+      "notification": {
+        "error": "Isochrone Error",
+        "errorIsochroneError": "An error occurred while calculating the isochrone. Please try again...",
+        "infoLayerAdded": "Isochrone layer added"
+      }
     }
   }
 }

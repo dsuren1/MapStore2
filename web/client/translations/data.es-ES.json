@@ -4506,6 +4506,30 @@
       "documentation": "Documentación",
       "filterApplied": "Filtro aplicado",
       "emptyFilterItems": "No hay elementos para mostrar"
+    },
+    "isochrone": {
+      "title": "Isochrone",
+      "tooltip": "Isochrone",
+      "modeTooltip": "Elige un modo de viaje para la ruta",
+      "clickOnMap": "Haz clic en el mapa para seleccionar un lugar",
+      "searching": "Buscando...",
+      "noResultsFound": "No se encontraron resultados",
+      "searchByLocationName": "Buscar por nombre de lugar...",
+      "mode": "Modo de viaje",
+      "rangeBy": "Rango por",
+      "departure": "Departamento",
+      "arrival": "Arribada",
+      "direction": "Dirección",
+      "reset": "Restablecer",
+      "run": "Ejecutar",
+      "buckets": "Cúbicas",
+      "exportAsGeoJSON": "Exportar como GeoJSON",
+      "addAsLayer": "Agregar como capa",
+      "notification": {
+        "error": "Error de Isochrone",
+        "errorIsochroneError": "Se produjo un error al calcular la isócrona. Por favor, inténtelo de nuevo...",
+        "infoLayerAdded": "Capa de Isochrone agregada"
+      }
     }
   }
 }
