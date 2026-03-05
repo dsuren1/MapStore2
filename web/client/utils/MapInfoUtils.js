@@ -22,6 +22,7 @@ import vector from './mapinfo/vector';
 import threeDTiles from './mapinfo/threeDTiles';
 import model from './mapinfo/model';
 import arcgis from './mapinfo/arcgis';
+import arcgisFeature from './mapinfo/arcgisFeature';
 import flatgeobuf from './mapinfo/flatgeobuf';
 // TODO import only index in ./mapinfo
 
@@ -377,6 +378,7 @@ export const services = {
     '3dtiles': threeDTiles,
     'model': model,
     'arcgis': arcgis,
+    'arcgis-feature': arcgisFeature,
     'flatgeobuf': flatgeobuf
 };
 /**

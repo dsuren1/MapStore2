@@ -7,20 +7,29 @@
  */
 
 import axios from '../libs/ajax';
+import Proj4js from 'proj4';
 import { reprojectBbox } from '../utils/CoordinatesUtils';
 import trimEnd from 'lodash/trimEnd';
+import { isFeatureServerUrl, esriGeometryTypeToGeoJSON } from '../utils/ArcGISUtils';
 
 let _cache = {};
 
 const extentToBoundingBox = (extent) => {
-    const wkid = extent?.spatialReference?.wkt
+    const wkt = extent?.spatialReference?.wkt;
+    const wkid = wkt
         ? '4326'
         : extent?.spatialReference?.latestWkid || extent?.spatialReference?.wkid;
-    const projectedExtent = extent?.spatialReference?.wkt
-        ? reprojectBbox([extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax], extent.spatialReference.wkt, 'EPSG:4326')
-        : extent
-            ? [extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax]
-            : null;
+
+    let projectedExtent = null;
+    if (wkt) {
+        const projName = 'ESRI_WKT_' + (extent?.spatialReference?.latestWkid || extent?.spatialReference?.wkid || 'custom');
+        if (!Proj4js.defs(projName)) {
+            Proj4js.defs(projName, wkt);
+        }
+        projectedExtent = reprojectBbox([extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax], projName, 'EPSG:4326');
+    } else if (extent) {
+        projectedExtent = [extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax];
+    }
 
     if (projectedExtent) {
         return {
@@ -104,7 +113,7 @@ const getData = (url, params = {}) => {
             const { layers, services } = data || {};
             if (services) {
                 return searchAndPaginate(
-                    services.filter(service => ['MapServer', 'ImageServer'].includes(service.type)).map((service) => {
+                    services.filter(service => ['MapServer', 'ImageServer', 'FeatureServer'].includes(service.type)).map((service) => {
                         return {
                             url: `${trimEnd(url, '/')}/${service.name}/${service.type}`,
                             version: data.currentVersion,
@@ -113,6 +122,27 @@ const getData = (url, params = {}) => {
                         };
                     }), params);
             }
+
+            if (isFeatureServerUrl(url)) {
+                const bbox = extentToBoundingBox(data?.fullExtent);
+                const queryCapable = (data?.capabilities || '').includes('Query');
+                const maxRecordCount = data?.maxRecordCount;
+                const featureRecords = (layers || [])
+                    .filter(() => queryCapable)
+                    .map((layer) => ({
+                        ...layer,
+                        url,
+                        version: data?.currentVersion,
+                        queryable: true,
+                        geometryType: layer.geometryType
+                            ? esriGeometryTypeToGeoJSON(layer.geometryType)
+                            : undefined,
+                        ...(maxRecordCount && { maxRecordCount }),
+                        bbox
+                    }));
+                return searchAndPaginate(featureRecords, params);
+            }
+
             // Map is similar to WMS GetMap capability for MapServer
             const mapExportSupported = (data?.capabilities || '').includes('Map') || (data?.capabilities || '').includes('Image');
             const commonProperties = {

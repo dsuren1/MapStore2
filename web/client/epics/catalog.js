@@ -335,6 +335,17 @@ export default (API) => ({
                         .merge(Rx.Observable.from(actions))
                         .catch((e) => Rx.Observable.of(describeError(layer, e)));
                 }
+                if (layer.type === 'arcgis-feature') {
+                    // geometryType is already known from FeatureServer metadata — no extra request needed.
+                    // concat ensures ADD_LAYER lands in the store before changeLayerProperties fires.
+                    const geometryType = layer.geometryType || 'GeometryCollection';
+                    return Rx.Observable.concat(
+                        Rx.Observable.from(actions),
+                        Rx.Observable.of(changeLayerProperties(id, {
+                            style: createDefaultStyle({ geometryType })
+                        }))
+                    );
+                }
                 if (layer.type === 'model') {
                     const properties = layer?.features?.[0]?.properties || {};
                     if (properties?.projectedCrsNotSupported || !properties?.projectedCrs) {
