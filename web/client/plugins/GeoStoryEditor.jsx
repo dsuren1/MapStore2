@@ -35,7 +35,9 @@ import {
     toggleCardPreview,
     toggleSettingsPanel,
     toggleSetting,
-    update
+    update,
+    duplicateSection,
+    duplicateContent
 } from '../actions/geostory';
 
 import Builder from '../components/geostory/builder/Builder';
@@ -103,7 +105,9 @@ const GeoStoryEditor = ({
     onSelect = () => {},
     onRemove = () => {},
     onUpdate = () => {},
-    onSort = () => {}
+    onSort = () => {},
+    onDuplicate = () => {},
+    onDuplicateContent = () => {}
 }) => {
     return mode === Modes.EDIT && !isFocused ? <div
         key="left-column"
@@ -133,6 +137,8 @@ const GeoStoryEditor = ({
             onToggleSettingsPanel={onToggleSettingsPanel}
             onUpdate={onUpdate}
             onUpdateSettings={onUpdateSettings}
+            onDuplicate={onDuplicate}
+            onDuplicateContent={onDuplicateContent}
         />
     </div> : null;
 };
@@ -169,6 +175,8 @@ export default createPlugin('GeoStoryEditor', {
             onSelect: selectCard,
             onSort: move,
             onUpdate: update,
+            onDuplicate: duplicateSection,
+            onDuplicateContent: duplicateContent,
             onBasicError: basicError
         }
     )(GeoStoryEditor),

@@ -13,8 +13,9 @@ import {branch, compose, createEventHandler, mapPropsStream, withHandlers, withP
 import {createSelector} from 'reselect';
 import uuid from "uuid";
 
-import {getCurrentFocusedContentEl, isFocusOnContentSelector, resourcesSelector} from '../../../../selectors/geostory';
-import {createMapObject} from '../../../../utils/GeoStoryUtils';
+import {getCurrentFocusedContentEl, isFocusOnContentSelector, resourcesSelector, getFocusedContentSelector, sectionsSelector} from '../../../../selectors/geostory';
+import {createMapObject, SectionTypes} from '../../../../utils/GeoStoryUtils';
+import {applyMapCenterToOtherMaps, applyMapScaleToOtherMaps} from '../../../../actions/geostory';
 import Message from '../../../I18N/Message';
 import ToolbarButton from '../../../misc/toolbar/ToolbarButton';
 import withConfirm from '../../../misc/withConfirm';
@@ -58,16 +59,41 @@ export const withFocusedContentMap = compose(
 /**
  * It Adjusts the path to update content map config obj
  */
-export const handleMapUpdate = withHandlers({
-    onChangeMap: ({update, focusedContent = {}}) =>
-        (path, value, mode = "merge") => {
-            update(`${focusedContent.path}.map.${path}`, value, mode);
-        },
-    onChange: ({update, focusedContent = {}}) =>
-        (path, value, mode = 'merge') => {
-            update(focusedContent.path + `.${path}`, value, mode);
-        }
-});
+export const handleMapUpdate = compose(
+    connect(
+        createSelector(
+            getFocusedContentSelector,
+            sectionsSelector,
+            (focusedContent, sections) => {
+                const sectionId = focusedContent?.path?.match(/sections\[\{"id":\s*"([^"]+)"\}\]/)?.[1];
+                const section = sectionId ? find(sections, { id: sectionId }) : undefined;
+                return {
+                    focusedContentForDispatch: focusedContent,
+                    isCarouselSection: section?.type === SectionTypes.CAROUSEL
+                };
+            }
+        ),
+        { applyMapCenterToOtherMaps, applyMapScaleToOtherMaps }
+    ),
+    withHandlers({
+        onChangeMap: ({update, focusedContent = {}}) =>
+            (path, value, mode = "merge") => {
+                update(`${focusedContent.path}.map.${path}`, value, mode);
+            },
+        onChange: ({update, focusedContent = {}}) =>
+            (path, value, mode = 'merge') => {
+                update(focusedContent.path + `.${path}`, value, mode);
+            },
+        onApplyCenterToOtherMaps: ({ applyMapCenterToOtherMaps: applyCenterAction, focusedContentForDispatch = {} }) =>
+            (center) => {
+                applyCenterAction(center, focusedContentForDispatch.path);
+            },
+        onApplyScaleToOtherMaps: ({ applyMapScaleToOtherMaps: applyScaleAction, focusedContentForDispatch = {} }) =>
+            (zoom) => {
+                applyScaleAction(zoom, focusedContentForDispatch.path);
+            }
+    })
+);
 
 /**
  * Handle edit map toggle, map rest and open AdvancedMapEditor.

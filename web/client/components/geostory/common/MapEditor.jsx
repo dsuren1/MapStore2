@@ -69,7 +69,10 @@ const MapEditor = ({
     closeNodeEditor,
     CloseBtn = () => (null),
     isDrawEnabled,
-    hideIdentifyOptions
+    hideIdentifyOptions,
+    onApplyCenterToOtherMaps = () => {},
+    onApplyScaleToOtherMaps = () => {},
+    isCarouselSection = false
 }) => {
     return (mode === Modes.EDIT && isFocused ? <div
         key="left-column"
@@ -120,6 +123,9 @@ const MapEditor = ({
                         selectedNodes={selectedNodes}
                         onSelect={onNodeSelect}
                         hideIdentifyOptions={hideIdentifyOptions}
+                        onApplyCenterToOtherMaps={onApplyCenterToOtherMaps}
+                        onApplyScaleToOtherMaps={onApplyScaleToOtherMaps}
+                        isCarouselSection={isCarouselSection}
                     />
                 ]}
         </BorderLayout>}

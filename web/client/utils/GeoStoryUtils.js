@@ -683,3 +683,51 @@ export const getContentsFeatureStyle = (markerStyle, contents, content, contentI
     ...feature.style,
     highlight: contentId === content.id
 });
+
+/**
+ * Collects all content paths that have a map configuration (resourceId indicating a map).
+ * Returns an array of objects with `path` and `sectionType`.
+ * @param {object[]} sections the story sections
+ * @returns {Array<{path: string, sectionType: string}>} paths to all map-containing contents
+ */
+export const collectMapContentPaths = (sections = []) => {
+    const paths = [];
+    const traverse = (items, basePath, sectionType) => {
+        (items || []).forEach(item => {
+            const itemPath = `${basePath}[{"id":"${item.id}"}]`;
+            const currentSectionType = sectionType || item.type;
+            if (item.resourceId || (item.map && (item.map.center || item.map.zoom !== undefined))) {
+                paths.push({ path: itemPath, sectionType: currentSectionType });
+            }
+            if (item.background && (item.background.resourceId || item.background.map)) {
+                paths.push({ path: itemPath + '.background', sectionType: currentSectionType });
+            }
+            if (item.contents) {
+                traverse(item.contents, itemPath + '.contents', currentSectionType);
+            }
+        });
+    };
+    traverse(sections, 'sections');
+    return paths;
+};
+
+/**
+ * Deep clones a section or content object, assigning new UUIDs to all `id` fields recursively.
+ * @param {object} obj the section or content to clone
+ * @returns {object} a deep copy with new UUIDs
+ */
+export const deepCloneWithNewIds = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(item => deepCloneWithNewIds(item));
+    const cloned = {};
+    Object.keys(obj).forEach(key => {
+        if (key === 'id') {
+            cloned[key] = uuid();
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            cloned[key] = deepCloneWithNewIds(obj[key]);
+        } else {
+            cloned[key] = obj[key];
+        }
+    });
+    return cloned;
+};

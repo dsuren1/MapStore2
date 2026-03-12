@@ -62,7 +62,11 @@ import {
     GEOSTORY_SCROLLING,
     hideCarouselItems,
     GEOSTORY_EXPORT,
-    GEOSTORY_IMPORT
+    GEOSTORY_IMPORT,
+    APPLY_MAP_CENTER_TO_OTHER_MAPS,
+    APPLY_MAP_SCALE_TO_OTHER_MAPS,
+    DUPLICATE_SECTION,
+    DUPLICATE_CONTENT
 } from '../actions/geostory';
 import { setControlProperty } from '../actions/controls';
 
@@ -94,7 +98,9 @@ import {
     updateUrlOnScrollSelector,
     getMediaEditorSettings,
     getAllCarouselContentsOfSection,
-    isGeoCarouselSection
+    isGeoCarouselSection,
+    sectionsSelector,
+    sectionSelectorCreator
 } from '../selectors/geostory';
 import { currentMediaTypeSelector, sourceIdSelector} from '../selectors/mediaEditor';
 
@@ -112,7 +118,9 @@ import {
     parseHashUrlScrollUpdate,
     getGeostoryMode,
     SectionTypes,
-    getIdFromPath
+    getIdFromPath,
+    collectMapContentPaths,
+    deepCloneWithNewIds
 } from '../utils/GeoStoryUtils';
 import { download, readJson } from '../utils/FileUtils';
 import { SourceTypes } from './../utils/MediaEditorUtils';
@@ -699,4 +707,65 @@ export const exportGeostory = action$ => action$
                 loadGeostoryError({...e})
             ))
     );
+
+/**
+ * Applies the center from the current map to all other map contents in the story.
+ * Skips carousel sections since they don't expose center editing.
+ */
+export const applyMapCenterToOtherMapsEpic = (action$, { getState = () => {} }) =>
+    action$.ofType(APPLY_MAP_CENTER_TO_OTHER_MAPS).switchMap(({ center, currentContentPath }) => {
+        const state = getState();
+        const sections = sectionsSelector(state);
+        const allPaths = collectMapContentPaths(sections);
+        const updates = allPaths
+            .filter(({ path, sectionType }) => path !== currentContentPath && sectionType !== SectionTypes.CAROUSEL)
+            .map(({ path }) => update(`${path}.map.center`, center, 'replace'));
+        return Observable.from(updates);
+    });
+
+/**
+ * Applies the zoom/scale from the current map to all other map contents in the story.
+ */
+export const applyMapScaleToOtherMapsEpic = (action$, { getState = () => {} }) =>
+    action$.ofType(APPLY_MAP_SCALE_TO_OTHER_MAPS).switchMap(({ zoom, currentContentPath }) => {
+        const state = getState();
+        const sections = sectionsSelector(state);
+        const allPaths = collectMapContentPaths(sections);
+        const updates = allPaths
+            .filter(({ path }) => path !== currentContentPath)
+            .map(({ path }) => update(`${path}.map.zoom`, zoom, 'replace'));
+        return Observable.from(updates);
+    });
+
+/**
+ * Duplicates a section in the story by deep cloning it with new UUIDs
+ * and inserting it right after the original.
+ */
+export const duplicateSectionEpic = (action$, { getState = () => {} }) =>
+    action$.ofType(DUPLICATE_SECTION).switchMap(({ sectionId }) => {
+        const state = getState();
+        const section = sectionSelectorCreator(sectionId)(state);
+        if (!section) return Observable.empty();
+        const cloned = deepCloneWithNewIds(section);
+        const prefix = section.title?.startsWith('Copy of ') ? '' : 'Copy of ';
+        cloned.title = `${prefix}${section.title || ''}`;
+        return Observable.of(add('sections', sectionId, cloned));
+    });
+
+/**
+ * Duplicates a content item within its parent container.
+ * Uses the contentPath (to the parent array) and contentId (of the item to clone).
+ */
+export const duplicateContentEpic = (action$, { getState = () => {} }) =>
+    action$.ofType(DUPLICATE_CONTENT).switchMap(({ contentPath, contentId }) => {
+        const state = getState();
+        const container = createPathSelector(contentPath)(state);
+        if (!isArray(container)) return Observable.empty();
+        const content = container.find(c => c.id === contentId);
+        if (!content) return Observable.empty();
+        const cloned = deepCloneWithNewIds(content);
+        const prefix = content.title?.startsWith('Copy of ') ? '' : 'Copy of ';
+        cloned.title = `${prefix}${content.title || ''}`;
+        return Observable.of(add(contentPath, contentId, cloned));
+    });
 

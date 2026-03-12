@@ -6,23 +6,47 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
-import {Form, FormGroup, ControlLabel} from 'react-bootstrap';
+import React, { useState, useCallback, useRef } from 'react';
+import {Form, FormGroup, ControlLabel, HelpBlock} from 'react-bootstrap';
 import Message from '../../../I18N/Message';
 import Select from "react-select";
 import {isNil} from "lodash";
 import { applyDefaults } from '../../../../utils/GeoStoryUtils';
 import { is3DVisualizationMode } from '../../../../utils/MapTypeUtils';
+import { getGoogleMercatorScales } from '../../../../utils/MapUtils';
 
+import Button from '../../../misc/Button';
 import SwitchButton from '../../../misc/switch/SwitchButton';
 import localizedProps from '../../../misc/enhancers/localizedProps';
 import FeatureInfoFormatSelector from '../../../misc/FeatureInfoFormatSelector';
+import CenterCoordinatesEditor from './CenterCoordinatesEditor';
+
+const FEEDBACK_DURATION = 3000;
+
+const useApplyFeedback = () => {
+    const [visible, setVisible] = useState(false);
+    const timerRef = useRef(null);
+    const show = useCallback(() => {
+        setVisible(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setVisible(false), FEEDBACK_DURATION);
+    }, []);
+    return [visible, show];
+};
 
 const SelectLocalized = localizedProps(["placeholder", "options"])(Select);
+
+const scales = getGoogleMercatorScales(0, 28).map((scale, idx) => ({
+    value: idx,
+    label: `1 : ${Math.round(scale)}`,
+    scale: Math.round(scale)
+}));
 
 export const Controls = ({
     map = {zoomControl: true, mapInfoControl: false},
     onChangeMap = () => { },
+    onApplyCenterToOtherMaps = () => {},
+    onApplyScaleToOtherMaps = () => {},
     ...props
 } = {}) => {
     const mapOptions = map && map.mapOptions || {};
@@ -32,7 +56,51 @@ export const Controls = ({
         mapInfoControl: !isNil(map.mapInfoControl) ? map.mapInfoControl : false
     });
     const is3D = is3DVisualizationMode(map);
+    const center = map.center || {};
+    const zoom = map.zoom;
+    const currentZoom = zoom !== undefined ? Math.round(zoom) : 0;
+    const [centerApplied, showCenterApplied] = useApplyFeedback();
+    const [scaleApplied, showScaleApplied] = useApplyFeedback();
+
     return (<Form className="ms-geostory-map-controls">
+        {!props.isCarouselSection && <FormGroup>
+            <div className="ms-geostory-map-controls-center">
+                <ControlLabel><Message msgId="geostory.mapEditor.center"/></ControlLabel>
+                <Button
+                    bsSize="sm"
+                    onClick={() => { onApplyCenterToOtherMaps(center); showCenterApplied(); }}
+                >
+                    <Message msgId="geostory.mapEditor.applyToOtherMaps" />
+                </Button>
+            </div>
+            <CenterCoordinatesEditor
+                center={center}
+                onChange={(newCenter) => onChangeMap("center", newCenter, "replace")}
+            />
+            {centerApplied && <HelpBlock className="ms-apply-success"><Message msgId="geostory.mapEditor.appliedSuccessfully" /></HelpBlock>}
+        </FormGroup>}
+        <FormGroup>
+            <div className="ms-geostory-map-controls-scale">
+                <ControlLabel><Message msgId="geostory.mapEditor.scale"/></ControlLabel>
+                <Button
+                    bsSize="sm"
+                    onClick={() => { onApplyScaleToOtherMaps(zoom); showScaleApplied(); }}
+                >
+                    <Message msgId="geostory.mapEditor.applyToOtherMaps" />
+                </Button>
+            </div>
+            <Select
+                clearable={false}
+                value={currentZoom}
+                options={scales}
+                onChange={(option) => {
+                    if (option) {
+                        onChangeMap("zoom", option.value, "replace");
+                    }
+                }}
+            />
+            {scaleApplied && <HelpBlock className="ms-apply-success"><Message msgId="geostory.mapEditor.appliedSuccessfully" /></HelpBlock>}
+        </FormGroup>
         {!is3D && <FormGroup>
             <ControlLabel><Message msgId="geostory.mapEditor.zoom"/></ControlLabel>
             <SwitchButton

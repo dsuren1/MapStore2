@@ -47,6 +47,10 @@ export const ENABLE_DRAW = "GEOSTORY:ENABLE_DRAW";
 export const GEOSTORY_EXPORT = "GEOSTORY:EXPORT";
 export const GEOSTORY_IMPORT = "GEOSTORY:IMPORT";
 export const RESET_GEOSTORY = "GEOSTORY:RESET";
+export const APPLY_MAP_CENTER_TO_OTHER_MAPS = "GEOSTORY:APPLY_MAP_CENTER_TO_OTHER_MAPS";
+export const APPLY_MAP_SCALE_TO_OTHER_MAPS = "GEOSTORY:APPLY_MAP_SCALE_TO_OTHER_MAPS";
+export const DUPLICATE_SECTION = "GEOSTORY:DUPLICATE_SECTION";
+export const DUPLICATE_CONTENT = "GEOSTORY:DUPLICATE_CONTENT";
 
 /**
  * Adds an entry to current story. The entry can be a section, a content or anything to append in an array (even sub-content)
@@ -276,3 +280,46 @@ export const geostoryImport = (file) => ({type: GEOSTORY_IMPORT, file});
  * reset geostory on page unmount
  */
 export const resetGeostory = () => ({ type: RESET_GEOSTORY });
+
+/**
+ * Apply the given center to all map contents in the story (except the current one).
+ * @param {object} center the center object {x, y, crs}
+ * @param {string} currentContentPath path of the current focused content (to skip)
+ */
+export const applyMapCenterToOtherMaps = (center, currentContentPath) => ({
+    type: APPLY_MAP_CENTER_TO_OTHER_MAPS,
+    center,
+    currentContentPath
+});
+
+/**
+ * Apply the given zoom level to all map contents in the story (except the current one).
+ * @param {number} zoom the zoom level
+ * @param {string} currentContentPath path of the current focused content (to skip)
+ */
+export const applyMapScaleToOtherMaps = (zoom, currentContentPath) => ({
+    type: APPLY_MAP_SCALE_TO_OTHER_MAPS,
+    zoom,
+    currentContentPath
+});
+
+/**
+ * Duplicates a section in the geostory.
+ * The duplicate is placed after the original section.
+ * @param {string} sectionId the id of the section to duplicate
+ */
+export const duplicateSection = (sectionId) => ({
+    type: DUPLICATE_SECTION,
+    sectionId
+});
+
+/**
+ * Duplicates a content within a section.
+ * @param {string} contentPath predicate-based path to the content's container array (e.g. 'sections[{"id":"..."}].contents')
+ * @param {string} contentId the id of the content to duplicate
+ */
+export const duplicateContent = (contentPath, contentId) => ({
+    type: DUPLICATE_CONTENT,
+    contentPath,
+    contentId
+});
