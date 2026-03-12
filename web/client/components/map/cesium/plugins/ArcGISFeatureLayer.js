@@ -63,15 +63,9 @@ const fetchAllPages = (url, baseParams, authSourceId, pageSize) => {
     return fetchPage(0);
 };
 
-const getEffectiveStrategy = (options) => {
-    const strategy = options?.strategy || 'tile';
-    // TiledBillboardCollection only supports Point geometries;
-    // fall back to bbox for non-point layers to avoid silent data loss
-    if (strategy === 'tile' && options?.geometryType && !['Point', 'MultiPoint'].includes(options.geometryType)) {
-        return 'bbox';
-    }
-    return strategy;
-};
+const getEffectiveStrategy = (options) => options?.strategy || 'tile';
+
+const isPointGeometry = (options) => !options?.geometryType || ['Point', 'MultiPoint'].includes(options.geometryType);
 
 const createLoader = (options) => {
     const strategy = getEffectiveStrategy(options);
@@ -122,13 +116,7 @@ const createLayer = (options, map) => {
         };
     }
 
-    let styledFeatures = new GeoJSONStyledFeatures({
-        features: [],
-        id: options?.id,
-        map,
-        opacity: options.opacity,
-        queryable: options.queryable === undefined || options.queryable
-    });
+    let styledFeatures;
     let loader;
     let loadingBbox;
     let bboxTimeout;
@@ -137,6 +125,16 @@ const createLayer = (options, map) => {
     const add = () => {
         const strategy = getEffectiveStrategy(options);
         loader = createLoader(options);
+
+        if (strategy !== 'tile') {
+            styledFeatures = new GeoJSONStyledFeatures({
+                features: [],
+                id: options?.id,
+                map,
+                opacity: options.opacity,
+                queryable: options.queryable === undefined || options.queryable
+            });
+        }
 
         if (strategy === 'bbox') {
             loadingBbox = () => {
@@ -163,24 +161,26 @@ const createLayer = (options, map) => {
             };
             map.camera.moveEnd.addEventListener(loadingBbox);
         } else if (strategy === 'tile') {
+            const tileLoadFn = (tileDef) => loader([
+                Cesium.Math.toDegrees(tileDef.rectangle.west),
+                Cesium.Math.toDegrees(tileDef.rectangle.south),
+                Cesium.Math.toDegrees(tileDef.rectangle.east),
+                Cesium.Math.toDegrees(tileDef.rectangle.north)
+            ]).then(({ data: collection }) => collection);
+
             tiledPrimitive = new TiledBillboardCollection({
                 map,
-                features: [],
-                id: options?.id,
-                opacity: options.opacity,
-                minimumLevel: options.minimumLevel || 17,
-                maximumLevel: options.maximumLevel || 17,
+                tileType: isPointGeometry(options) ? 'billboard' : 'feature',
                 msId: options.id,
+                opacity: options.opacity,
+                minimumLevel: options.minimumLevel || (isPointGeometry(options) ? 17 : 0),
+                maximumLevel: options.maximumLevel || (isPointGeometry(options) ? 17 : 18),
                 debugTiles: false,
                 queryable: options.queryable === undefined || options.queryable,
                 style: options.style,
+                styleOptions: isPointGeometry(options) ? undefined : options,
                 tileWidth: options?.tileSize || 512,
-                loadTile: (tileDef) => loader([
-                    Cesium.Math.toDegrees(tileDef.rectangle.west),
-                    Cesium.Math.toDegrees(tileDef.rectangle.south),
-                    Cesium.Math.toDegrees(tileDef.rectangle.east),
-                    Cesium.Math.toDegrees(tileDef.rectangle.north)
-                ]).then(({ data: collection }) => collection)
+                loadTile: tileLoadFn
             });
             tiledPrimitive.load();
         } else {

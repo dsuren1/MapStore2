@@ -114,18 +114,13 @@ const createLayer = (options, map) => {
             };
             map.camera.moveEnd.addEventListener(loadingBbox);
         } else if (options?.strategy === 'tile' && options?.serverType === ServerTypes.NO_VENDOR) {
-            // Note that 'TiledBillboardCollection' can only be used for point geometric features for now, So WFS with other than point geometry should not be used for now on strategy === 'tile'
             tiledPrimitive = new TiledBillboardCollection({
                 map,
-                features: [],
-                id: options?.id,
+                tileType: 'billboard',
+                msId: options.id,
                 opacity: options.opacity,
-                // the maximum and minimum levels refers to the request done by TiledBillboardCollection
-                // these values are different from maximum and minimum resolutions to avoid visibility issue when the camera is tilted
-                // we should review resolutions behavior to match similar zoom level when camera is tilted
                 minimumLevel: options.minimumLevel || 17,
                 maximumLevel: options.maximumLevel || 17,
-                msId: options.id,
                 debugTiles: false,
                 queryable: options.queryable === undefined || options.queryable,
                 style: options.style,
