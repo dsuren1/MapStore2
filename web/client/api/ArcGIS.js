@@ -16,19 +16,30 @@ let _cache = {};
 
 const extentToBoundingBox = (extent) => {
     const wkt = extent?.spatialReference?.wkt;
-    const wkid = wkt
-        ? '4326'
-        : extent?.spatialReference?.latestWkid || extent?.spatialReference?.wkid;
+    const wkid = extent?.spatialReference?.latestWkid || extent?.spatialReference?.wkid;
 
+    if (!extent) return null;
+
+    const rawBbox = [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
     let projectedExtent = null;
+    let outCrs = 'EPSG:4326';
+
     if (wkt) {
-        const projName = 'ESRI_WKT_' + (extent?.spatialReference?.latestWkid || extent?.spatialReference?.wkid || 'custom');
+        const projName = 'ESRI_WKT_' + (wkid || 'custom');
         if (!Proj4js.defs(projName)) {
             Proj4js.defs(projName, wkt);
         }
-        projectedExtent = reprojectBbox([extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax], projName, 'EPSG:4326');
-    } else if (extent) {
-        projectedExtent = [extent?.xmin, extent?.ymin, extent?.xmax, extent?.ymax];
+        projectedExtent = reprojectBbox(rawBbox, projName, 'EPSG:4326');
+    } else if (wkid && String(wkid) !== '4326' && String(wkid) !== '4269') {
+        const srcCrs = `EPSG:${wkid}`;
+        try {
+            projectedExtent = reprojectBbox(rawBbox, srcCrs, 'EPSG:4326');
+        } catch (e) {
+            projectedExtent = rawBbox;
+            outCrs = srcCrs;
+        }
+    } else {
+        projectedExtent = rawBbox;
     }
 
     if (projectedExtent) {
@@ -39,7 +50,7 @@ const extentToBoundingBox = (extent) => {
                 maxx: projectedExtent[2],
                 maxy: projectedExtent[3]
             },
-            crs: `EPSG:${wkid}`
+            crs: outCrs
         };
     }
     return null;
@@ -124,7 +135,7 @@ const getData = (url, params = {}) => {
             }
 
             if (isFeatureServerUrl(url)) {
-                const bbox = extentToBoundingBox(data?.fullExtent);
+                const bbox = extentToBoundingBox(data?.initialExtent) || extentToBoundingBox(data?.fullExtent);
                 const queryCapable = (data?.capabilities || '').includes('Query');
                 const maxRecordCount = data?.maxRecordCount;
                 const featureRecords = (layers || [])
