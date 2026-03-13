@@ -192,10 +192,15 @@ const createLayer = (options, map) => {
         }
     };
 
-    return {
+    const layerObj = {
         detached: true,
         styledFeatures,
-        add,
+        tiledPrimitive,
+        add: () => {
+            add();
+            layerObj.styledFeatures = styledFeatures;
+            layerObj.tiledPrimitive = tiledPrimitive;
+        },
         remove: () => {
             if (styledFeatures) {
                 styledFeatures.destroy();
@@ -210,6 +215,7 @@ const createLayer = (options, map) => {
             }
         }
     };
+    return layerObj;
 };
 
 Layers.registerType('arcgis-feature', {
@@ -222,18 +228,23 @@ Layers.registerType('arcgis-feature', {
         ) {
             return createLayer(newOptions, map);
         }
-        if (layer?.styledFeatures && !isEqual(newOptions.style, oldOptions.style)) {
-            layerToGeoStylerStyle(newOptions)
-                .then((style) => {
-                    getStyle(applyDefaultStyleToVectorLayer({
-                        ...newOptions,
-                        features: layer?.styledFeatures?._originalFeatures,
-                        style
-                    }), 'cesium')
-                        .then((styleFunc) => {
-                            layer.styledFeatures.setStyleFunction(styleFunc);
-                        });
-                });
+        if (!isEqual(newOptions.style, oldOptions.style)) {
+            if (layer?.styledFeatures) {
+                layerToGeoStylerStyle(newOptions)
+                    .then((style) => {
+                        getStyle(applyDefaultStyleToVectorLayer({
+                            ...newOptions,
+                            features: layer?.styledFeatures?._originalFeatures,
+                            style
+                        }), 'cesium')
+                            .then((styleFunc) => {
+                                layer.styledFeatures.setStyleFunction(styleFunc);
+                            });
+                    });
+            }
+            if (layer?.tiledPrimitive) {
+                layer.tiledPrimitive.setStyleFunction(newOptions.style);
+            }
         }
         if (layer?.styledFeatures && newOptions.opacity !== oldOptions.opacity) {
             layer.styledFeatures.setOpacity(newOptions.opacity);
