@@ -192,9 +192,10 @@ describe('TiledBillboardCollection', () => {
     });
 
 
-    it('should create TiledBillboardCollection with custom options', () => {
+    it('should create TiledBillboardCollection with billboard tileType and custom options', () => {
         const customCollection = new TiledBillboardCollection({
             map: mockMap,
+            tileType: 'billboard',
             debugTiles: true,
             tileWidth: 256,
             minimumLevel: 5,
@@ -208,11 +209,21 @@ describe('TiledBillboardCollection', () => {
         });
         customCollection.load();
 
+        expect(customCollection._tileType).toBe('billboard');
         expect(customCollection._debugTiles).toBe(true);
         expect(customCollection._tileWidth).toBe(256);
         expect(customCollection._minimumLevel).toBe(5);
         expect(customCollection._maximumLevel).toBe(15);
         expect(customCollection._style).toEqual({ symbolizers: [{ kind: 'Icon' }] });
+    });
+
+    it('should default to feature tileType', () => {
+        const collection = new TiledBillboardCollection({
+            map: mockMap,
+            style: { symbolizers: [{ kind: 'Icon' }] }
+        });
+
+        expect(collection._tileType).toBe('feature');
     });
 
     it('should handle loadTile function that returns features', (done) => {
@@ -226,13 +237,13 @@ describe('TiledBillboardCollection', () => {
 
         const customCollection = new TiledBillboardCollection({
             map: mockMap,
+            tileType: 'billboard',
             loadTile: () => Promise.resolve({ features: mockFeatures }),
             style: { symbolizers: [{ kind: 'Icon' }] }
         });
 
         expect(customCollection._loadTile).toBeTruthy();
 
-        // Test the loadTile function with a mock tile
         const mockTile = { id: 'test-tile', x: 0, y: 0, z: 10 };
         customCollection._loadTile(mockTile).then((result) => {
             expect(result).toEqual({ features: mockFeatures });

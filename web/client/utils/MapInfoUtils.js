@@ -23,6 +23,7 @@ import threeDTiles from './mapinfo/threeDTiles';
 import model from './mapinfo/model';
 import arcgis from './mapinfo/arcgis';
 import cog from './mapinfo/cog';
+import arcgisFeature from './mapinfo/arcgisFeature';
 import flatgeobuf from './mapinfo/flatgeobuf';
 // TODO import only index in ./mapinfo
 
@@ -379,7 +380,8 @@ export const services = {
     'model': model,
     'arcgis': arcgis,
     'flatgeobuf': flatgeobuf,
-    'cog': cog
+    'cog': cog,
+    'arcgis-feature': arcgisFeature
 };
 /**
  * To get the custom viewer with the given type
