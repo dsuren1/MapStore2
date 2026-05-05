@@ -48,5 +48,52 @@ describe('FilterDataTab component', () => {
         const inputGroups = container.querySelectorAll('.input-group');
         expect(inputGroups.length).toBe(8);
     });
+
+    it('does not render a per-filter description field', () => {
+        // The description field was removed by request; the data tab must
+        // not expose a textarea for it any more.
+        ReactDOM.render(
+            <FilterDataTab
+                data={{
+                    data: {
+                        dataSource: DATA_SOURCE_TYPES.FEATURES,
+                        valuesFrom: 'grouped',
+                        filterComposition: 'AND'
+                    }
+                }}
+                onChange={() => {}}
+                onOpenLayerSelector={() => {}}
+                onEditorChange={() => {}}
+            />,
+            document.getElementById('container')
+        );
+        const container = document.getElementById('container');
+        expect(container.querySelector('textarea')).toNotExist();
+    });
+
+    it('passes builderEntry through to LayerSelectorField so the field is editable', () => {
+        ReactDOM.render(
+            <FilterDataTab
+                data={{
+                    data: {
+                        dataSource: DATA_SOURCE_TYPES.FEATURES,
+                        valuesFrom: 'grouped',
+                        filterComposition: 'AND',
+                        layer: { name: 'L', title: 'L' }
+                    }
+                }}
+                onChange={() => {}}
+                onOpenLayerSelector={() => {}}
+                onEditorChange={() => {}}
+                builderEntry="toc-icon"
+            />,
+            document.getElementById('container')
+        );
+        const container = document.getElementById('container');
+        const layerInput = container.querySelector('input[type="text"]');
+        expect(layerInput).toExist();
+        // when builderEntry === 'toc-icon' the input must NOT be disabled
+        expect(layerInput.disabled).toBe(false);
+    });
 });
 

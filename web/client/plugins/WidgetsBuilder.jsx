@@ -26,6 +26,7 @@ import { toggleConnection, createWidget } from '../actions/widgets';
 import withMapExitButton from './widgetbuilder/enhancers/withMapExitButton';
 import WidgetTypeBuilder from './widgetbuilder/WidgetTypeBuilder';
 import FeatureEditorButton from './widgetbuilder/FeatureEditorButton';
+import FilterWidgetTOCButton from './widgetbuilder/FilterWidgetTOCButton';
 const Builder = compose(
     connect(
         createSelector(
@@ -145,13 +146,22 @@ export default createPlugin('WidgetsBuilder', {
     component: Plugin,
     epics,
     containers: {
-        TOC: {
+        TOC: [{
             doNotHide: true,
             name: "WidgetBuilder",
             target: 'toolbar',
             Component: WidgetsBuilderButton,
             position: 10
-        },
+        }, {
+            doNotHide: true,
+            name: "FilterWidgetTOC",
+            target: 'toolbar',
+            Component: FilterWidgetTOCButton,
+            // Anchored at the end of the TOC toolbar so the "Create a filter
+            // widget for the map" icon is always the last action; existing
+            // buttons currently top out at 12 (Annotations, MetadataInfo).
+            position: 99
+        }],
         FeatureEditor: {
             doNotHide: true,
             target: "toolbar",

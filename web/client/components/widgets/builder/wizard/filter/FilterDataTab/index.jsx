@@ -29,6 +29,7 @@ const FilterDataTab = ({
     openFilterEditor,
     onEditorChange = () => {},
     dashBoardEditing,
+    builderEntry,
     selections = {}
 }) => {
     // Normalize and derive filter data
@@ -133,6 +134,7 @@ const FilterDataTab = ({
                 layerIsRequired={filterDataState.layerIsRequired}
                 onOpenLayerSelector={onOpenLayerSelector}
                 dashBoardEditing={dashBoardEditing}
+                builderEntry={builderEntry}
                 hideFilter={filterDataState.isUserDefined}
             />
 

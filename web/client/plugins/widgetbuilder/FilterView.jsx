@@ -172,13 +172,18 @@ const FilterView = ({
     loading = false,
     missingParameters = false,
     selectableItems = [],
-    fetchError = false
+    fetchError = false,
+    perItemToolbar = null,
+    collapseTool = null,
+    collapsed: collapsedProp
 }) => {
     if (!filterData) {
         return null;
     }
 
     const { layout = {} } = filterData;
+    const filterDisabled = filterData?.disabled === true;
+    const isCollapsed = collapsedProp === true;
     const Component = componentMap[layout.variant ?? 'checkbox'];
     if (!Component) {
         throw new Error(`Unsupported filter variant: ${layout.variant}`);
@@ -301,7 +306,7 @@ const FilterView = ({
                 </div>
             )}
             <div className="ms-filter-selector-header">
-
+                {collapseTool}
                 {showTitle
                     ? <FilterTitle
                         key={filterData.id + '-title'}
@@ -358,7 +363,7 @@ const FilterView = ({
                         : null
                 }
 
-                {showSelectAll && (<FilterSelectAllOptions
+                {showSelectAll && !isCollapsed && !filterDisabled && (<FilterSelectAllOptions
                     key={filterData.id + '-select-all'}
                     items={selectableItems}
                     selectedValues={selections || []}
@@ -367,19 +372,22 @@ const FilterView = ({
                     allowEmptySelection={!forceSelection}
                 />)
                 }
+                {perItemToolbar}
             </div>
-            {selectableItems?.length > 0 ? (
-                <Component
-                    key={filterData.id}
-                    items={selectableItems}
-                    selectionMode={layout.selectionMode}
-                    selectedValues={selections || []}
-                    onSelectionChange={onChangeSelections}
-                    {...getLayoutProps()}
-                />
+            {!isCollapsed && (selectableItems?.length > 0 ? (
+                <div style={filterDisabled ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                    <Component
+                        key={filterData.id}
+                        items={selectableItems}
+                        selectionMode={layout.selectionMode}
+                        selectedValues={selections || []}
+                        onSelectionChange={onChangeSelections}
+                        {...getLayoutProps()}
+                    />
+                </div>
             ) : (
                 !loading ? <FilterNoSelectableItems className="ms-filter-view-no-selectable-items" /> : null
-            )}
+            ))}
         </div>
     );
 };
@@ -401,20 +409,25 @@ FilterView.propTypes = {
     filterData: PropTypes.shape({
         id: PropTypes.string.isRequired,
         label: PropTypes.string,
+        disabled: PropTypes.bool,
         layout: PropTypes.shape({
             variant: PropTypes.string.isRequired,
             icon: PropTypes.string,
             selectionMode: PropTypes.string,
             direction: PropTypes.oneOf(['horizontal', 'vertical']),
             maxHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        })
+        }),
+        data: PropTypes.object
     }),
     selections: PropTypes.array,
     onSelectionChange: PropTypes.func,
     loading: PropTypes.bool,
     missingParameters: PropTypes.bool,
     selectableItems: PropTypes.array,
-    fetchError: PropTypes.bool
+    fetchError: PropTypes.bool,
+    perItemToolbar: PropTypes.node,
+    collapseTool: PropTypes.node,
+    collapsed: PropTypes.bool
 };
 
 // Export unwrapped component for testing

@@ -1,0 +1,159 @@
+@tdipisa @allyoucanmap 
+## ArcGIS FeatureServer — Implementation Plan
+
+### Overview
+
+A new layer type `arcgis-feature` will be introduced in MapStore2. FeatureServer sub-layers will be discovered via the existing ArcGIS catalog, rendered as vector features in both OpenLayers and CesiumJS, and fully integrated with identify, style editor, legend, and map persistence.
+
+All requests to ArcGIS will use `inSR=4326` / `outSR=4326` and `f=geojson`. Projection handling will be done entirely client-side via proj4 (registered by MapStore at startup), so **any custom projection** configured in `projectionDefs` will be supported without requiring ArcGIS to recognize the WKID.
+
+---
+
+### 1. Catalog — FeatureServer endpoint discovery
+
+- `FeatureServer` will be added to the service type filter alongside `MapServer` / `ImageServer`.
+- FeatureServer root metadata (`layers[]`) will be parsed into individual catalog records — one per sub-layer. Tables (no geometry) will be filtered out.
+- Each record will carry: `id`, `name`, `geometryType`, `maxRecordCount`, `bbox`.
+- `extentToBoundingBox` will register WKT-defined spatial references with proj4 before reprojecting to EPSG:4326, supporting services with custom spatial references .
+- Layer of `type: 'arcgis-feature'` with `strategy: 'tile'` as default is produced
+
+**`esriGeometryTypeToGeoJSON` mapping:**
+
+| ESRI type | GeoJSON type |
+|-----------|-------------|
+| `esriGeometryPoint` | `Point` |
+| `esriGeometryMultipoint` | `MultiPoint` |
+| `esriGeometryPolyline` | `MultiLineString` |
+| `esriGeometryPolygon` | `MultiPolygon` |
+| `esriGeometryEnvelope` | `Polygon` |
+| Unknown / missing | `GeometryCollection` (fallback) |
+
+---
+
+### 2. Load strategies
+
+The `arcgis-feature` layer will support three loading strategies, configurable via `options.strategy` (default: `tile`). The strategy will be persisted in the map configuration.
+
+#### Query parameters
+
+All strategies will send requests to `{featureServerUrl}/{layerId}/query` with:
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `f` | `geojson` | Response format — native GeoJSON, no conversion needed |
+| `where` | `1=1` | Match all features |
+| `outFields` | `*` | Return all attributes |
+| `outSR` | `4326` | Response coordinates in EPSG:4326 |
+| `inSR` | `4326` | Input geometry CRS (bbox/tile strategies) |
+| `geometry` | `xmin,ymin,xmax,ymax` | Envelope filter (bbox/tile strategies) |
+| `geometryType` | `esriGeometryEnvelope` | Geometry filter type (bbox/tile strategies) |
+| `spatialRel` | `esriSpatialRelIntersects` | Spatial relationship (bbox/tile strategies) |
+| `resultOffset` | `0, N, 2N, ...` | Pagination offset |
+| `resultRecordCount` | `maxRecordCount` or `1000` | Page size — will use service's `maxRecordCount` when available |
+
+#### Strategies
+
+| Strategy | Default | OL mechanism | Cesium mechanism | Notes |
+|----------|---------|-------------|-----------------|-------|
+| `tile` | Yes | `ol/loadingstrategy/tile` with XYZ grid | `TiledBillboardCollection` | Fetches features per tile cell. In Cesium, **point/multipoint only** — non-point layers will auto-downgrade to `bbox` |
+| `bbox` | — | `ol/loadingstrategy/bbox` | `camera.moveEnd` listener (debounced 300ms) | Fetches features for the current viewport extent |
+| `all` | — | `ol/loadingstrategy/all` | Single fetch on layer add | Fetches all features via paginated requests |
+
+#### Pagination
+
+FeatureServer enforces `maxRecordCount` per request. A `fetchAllPages` helper will paginate using `resultOffset` / `resultRecordCount` until the response's `exceededTransferLimit` flag is `false`. Page size will default to the service's advertised `maxRecordCount` (fallback: 1000). Duplicate features will be filtered via OBJECTID tracking.
+
+---
+
+### 3. OpenLayers layer plugin
+
+**Sample layer configuration:**
+
+```json
+{
+    "type": "arcgis-feature",
+    "url": "https://services2.arcgis.com/pROHh69WvVijk4nR/ArcGIS/rest/services/GSE_DISTRIBUTORI_STANDARD/FeatureServer",
+    "title": "GSE Distributori Standard",
+    "strategy": "tile",
+    "geometryType": "MultiPolygon",
+    "maxRecordCount": 2000,
+    "visibility": true
+}
+```
+
+Will be registered as `arcgis-feature` layer type using `VectorSource` + `VectorLayer`.
+
+- Bbox extent (in map CRS) will be reprojected to EPSG:4326 via `reprojectBbox` before querying.
+- Response will be read with `dataProjection: 'EPSG:4326', featureProjection: <mapCRS>` - OL + proj4 will handle reprojection to the map's CRS.
+- Will dispatch  features load to correctly drive the global loading spinner for concurrent tile/bbox requests.
+- Update triggers: security change, strategy change, style change, min/max resolution change.
+
+---
+
+### 4. CesiumJS layer plugin
+
+Will use `GeoJSONStyledFeatures` for rendering. Cesium operates natively in EPSG:4326, so no client-side reprojection will be needed.
+
+- `TiledBillboardCollection` will be used for point/multipoint layers under `tile` strategy.
+- For non-point geometry types, `getEffectiveStrategy` will transparently downgrade `tile` → `bbox` since `TiledBillboardCollection` only supports point rendering.
+- `bbox` strategy will use `camera.moveEnd` with a 300ms debounce.
+
+---
+
+### 5. Identify (GetFeatureInfo)
+
+Will query `{url}/{layerId}/query` with a click-derived bbox in EPSG:4326 and `f=geojson`. Features will be returned directly - no ESRI-to-GeoJSON conversion needed.
+
+---
+
+### 6. Style editor
+
+- `arcgis-feature` will be added to `isVectorStylableLayer` - enabling the Style tab in layer settings.
+- `capabilitiesRequest` will resolve immediately with `layer.geometryType` from catalog metadata (no server round-trip). Feature collection will be resolved from `layer.features`.
+
+---
+
+### 7. Legend
+
+`arcgis-feature` will render `VectorLegend` generated from the GeoStyler style (same as WFS/vector layers). FeatureServer does not expose a `/legend` endpoint, so no ArcGIS-specific legend component will be needed.
+
+---
+
+### 8. Persistence
+
+`saveLayer` will persist `strategy`, `geometryType`, and `maxRecordCount` so they survive map save/reload.
+
+---
+
+### Design decisions
+
+> [!NOTE]
+**Default strategy: `tile`**
+Tile strategy will provide the best balance of performance and UX for typical FeatureServer datasets. It will load features incrementally per tile grid cell, avoid fetching the entire dataset at once, and provide natural spatial partitioning.<br>
+**Custom projection / CRS support**
+All ArcGIS requests will use `inSR=4326` / `outSR=4326`, with bbox reprojection handled client-side via proj4. Any custom CRS defined in MapStore's `projectionDefs` (registered with proj4 at startup) will be fully supported — the map extent will be reprojected from the custom CRS to EPSG:4326 before querying, and response features will be reprojected back into the map's CRS by OpenLayers. This removes any dependency on ArcGIS recognizing the projection WKID.<br>
+**Mixed geometries within a single layer**
+ArcGIS FeatureServer layers expose a single geometryType (e.g. `esriGeometryPolygon`, `esriGeometryPoint`) defined at the layer level. A layer cannot contain mixed geometry types, as the geometry type is fixed by the service schema. While different sub-layers within the same FeatureServer may use different geometry types, each sub-layer will be treated as an independent layer in MapStore<br>
+**Cesium rendering by geometry type**
+`TiledBillboardCollection` will be used for point/multipoint layers under the `tile` strategy. For all other geometry types (polyline, polygon), these layers will automatically fall back to `bbox` strategy using `GeoJSONStyledFeatures` with a `camera.moveEnd` listener. This will be handled transparently by `getEffectiveStrategy`.<br>
+**`drawingInfo.renderer` (future)**
+Verified endpoints expose ESRI renderers in `drawingInfo`. Converting these to GeoStyler for default symbology would be a valuable future enhancement — not in scope for this implementation.<br>
+**Point clustering (future)**
+ArcGIS does not provide server-side clustering — `FeatureReductionCluster` in the ArcGIS JS SDK is entirely client-side. Rather than introducing the ArcGIS JS SDK as a dependency, clustering can be achieved natively using `ol/source/Cluster` in OpenLayers (wraps the existing `VectorSource` with a configurable pixel distance). For CesiumJS, a lightweight spatial indexing library such as `supercluster` could be evaluated. This would be a future enhancement applicable to all vector layer types, not specific to `arcgis-feature`.
+
+---
+
+### Task summary & estimates
+
+| # | Task | Estimate | Uncertainty |
+|---|------|----------|-------------|
+| 1 | Catalog - Support | 1 day | Low |
+| 2 | OpenLayers - Support | 2 days | Medium |
+| 3 | CesiumJS - Support | 2 days | Medium |
+| 4 | Identify - Support | 0.5 days | Low |
+| 5 | Style editor - Support | 1 day | Low |
+| 6 | Legend - Support | 0.25 days | Low |
+| 7 | Persistence — save/reload  | 0.25 days | Low |
+| 8 | Unit tests & code refactor | 1 day | Low |
+| | **Total** | **~8 days** | |
+
