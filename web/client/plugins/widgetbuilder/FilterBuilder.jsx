@@ -12,6 +12,7 @@ import BorderLayout from '../../components/layout/BorderLayout';
 import BuilderHeader from './BuilderHeader';
 import Toolbar from '../../components/widgets/builder/wizard/filter/Toolbar';
 import LayerSelector from './FilterLayerSelector';
+import MapLayerSelectorComponent from './MapLayerSelector';
 import FilterBuilderContent from './FilterBuilderContent';
 import {
     insertWidget,
@@ -21,6 +22,7 @@ import {
     changeEditorSetting
 } from '../../actions/widgets';
 import filterLayerSelector from './enhancers/filterLayerSelector';
+import mapLayerSelector from './enhancers/mapLayerSelector';
 import viewportBuilderConnectMask from './enhancers/connection/viewportBuilderConnectMask';
 import { catalogEditorEnhancer } from './enhancers/catalogEditorEnhancer';
 import { wizardSelector, wizardStateToProps } from './commons';
@@ -57,7 +59,11 @@ const FilterToolbar = compose(
 
 /*
  * in case you don't have a layer selected (e.g. dashboard) the filter builder
- * prompts a catalog view to allow layer selection
+ * prompts a catalog view to allow layer selection.
+ *
+ * When the builder is opened from the TOC icon (builderEntry === 'toc-icon')
+ * we list current map layers instead of catalog records so the user picks
+ * from layers already in the map.
  */
 const chooseLayerEnhancer = compose(
     withState('showLayers', "toggleLayerSelector", false),
@@ -65,6 +71,10 @@ const chooseLayerEnhancer = compose(
     connect(wizardSelector, null, wizardStateToProps),
     viewportBuilderConnectMask,
     catalogEditorEnhancer,
+    branch(
+        ({showLayers, editorData} = {}) => showLayers && editorData?.builderEntry === 'toc-icon',
+        renderComponent(mapLayerSelector(MapLayerSelectorComponent))
+    ),
     branch(
         ({showLayers} = {}) => showLayers,
         renderComponent(filterLayerSelector(LayerSelector))

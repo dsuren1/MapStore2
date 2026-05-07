@@ -31,10 +31,14 @@ const LayerSelectorField = ({
     onFilterLayer = () => {},
     onOpenLayerSelector,
     dashBoardEditing = false,
+    builderEntry,
     hideFilter = false
 }) => {
     const layerTitle = getLayerTitle(layer);
-    const isDisabled = !dashBoardEditing && layer;
+    // when the builder is opened from the TOC icon we allow the user to change
+    // the source layer just like the dashboard editing flow does.
+    const allowLayerChange = dashBoardEditing || builderEntry === 'toc-icon';
+    const isDisabled = !allowLayerChange && layer;
     const validationState = layerIsRequired && !layer ? 'error' : null;
 
     const hasFilter = useMemo(() =>{
@@ -90,6 +94,7 @@ LayerSelectorField.propTypes = {
     showEditFilter: PropTypes.bool,
     filter: PropTypes.object,
     dashBoardEditing: PropTypes.bool,
+    builderEntry: PropTypes.string,
     hideFilter: PropTypes.bool
 };
 
