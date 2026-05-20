@@ -35,7 +35,8 @@ const FilterBuilderContent = ({
         filters = [],
         selectedFilterId = null,
         selections = {},
-        interactions = []
+        interactions = [],
+        builderEntry
     } = editorData;
 
     // Initialize filters
@@ -197,6 +198,7 @@ const FilterBuilderContent = ({
             openFilterEditor={openFilterEditor}
             onEditorChange={onChangeEditor}
             dashBoardEditing={dashBoardEditing}
+            builderEntry={builderEntry}
             step={step}
             setPage={setPage}
             onFinish={onFinish}

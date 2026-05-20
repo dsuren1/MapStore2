@@ -67,6 +67,33 @@ describe('FilterLayoutTab component', () => {
         Simulate.change(labelInput);
     });
 
+    it('toggles layout.defaultExpanded via the new Items panel checkbox', (done) => {
+        ReactDOM.render(<FilterLayoutTab
+            data={{ layout: { defaultExpanded: true } }}
+            onChange={(key, value) => {
+                if (key === 'layout.defaultExpanded') {
+                    expect(value).toBe(false);
+                    done();
+                }
+            }}
+        />, document.getElementById('container'));
+        const container = document.getElementById('container');
+        // Items panel is expanded by default; find all checkboxes and toggle
+        // the one whose label includes the default-expanded message id.
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        // there are existing checkboxes (showSelectAll, showNoTargetsInfo,
+        // forceSelection); the new defaultExpanded should be present too.
+        expect(checkboxes.length).toBeGreaterThanOrEqualTo(4);
+        // pick the checkbox associated with "defaultExpanded" via its
+        // ControlLabel text content
+        const formGroups = Array.from(container.querySelectorAll('.form-group-flex'));
+        const target = formGroups.find(g => /defaultExpanded/.test(g.innerHTML));
+        expect(target).toExist();
+        const cb = target.querySelector('input[type="checkbox"]');
+        expect(cb).toExist();
+        Simulate.change(cb);
+    });
+
     it('should include slider in the variant options when selection mode is single', () => {
         ReactDOM.render(
             <FilterLayoutTab

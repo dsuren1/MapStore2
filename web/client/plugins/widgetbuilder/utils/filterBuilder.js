@@ -32,6 +32,10 @@ const getFilterName = (count = 0) => `Filter ${count + 1}`;
 export const createNewFilter = (filtersCount = 0) => {
     return {
         id: uuidv1(),
+        // Per-filter "disabled" flag (different from select-all/no-selection):
+        // when true the filter is still rendered but excluded from interaction
+        // CQL composition (see applyFilterWidgetInteractionsEpic).
+        disabled: false,
         layout: {
             variant: 'checkbox',
             icon: 'filter',
@@ -49,7 +53,11 @@ export const createNewFilter = (filtersCount = 0) => {
                 fontWeight: 'normal',
                 fontStyle: 'normal'
             },
-            forceSelection: false
+            forceSelection: false,
+            // initial collapsed state on the widget card. defaults to expanded.
+            defaultExpanded: true,
+            // expose the zoom-to-filtered icon on the per-filter toolbar.
+            allowZoomToFiltered: true
         },
         items: [],
         addedOptionalTargets: [],

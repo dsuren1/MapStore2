@@ -371,6 +371,7 @@ export default createPlugin("WidgetsPlugin", {
     },
     epics: {
         ...require('../epics/widgets').default,
-        ...require('../epics/interactions').default
+        ...require('../epics/interactions').default,
+        ...require('../epics/filterWidgetCard').default
     }
 });

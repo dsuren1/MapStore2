@@ -76,13 +76,16 @@ export const createChart = () => ({
 export const insertWidget = (widget, target = DEFAULT_TARGET) => {
     // Use existing ID if widget already has one (from editNewWidget), otherwise generate new one
     const widgetId = widget.id || uuid();
+    // builderEntry is a transient editor-only flag (e.g. 'toc-icon') used to drive
+    // the wizard UI; it must not be persisted on the saved widget.
+    const { builderEntry, ...persisted } = widget; // eslint-disable-line no-unused-vars
     return {
         type: INSERT,
         target,
         id: widgetId,
         // Ensure widget object also has the ID set (preserves existing ID)
         widget: {
-            ...widget,
+            ...persisted,
             id: widgetId
         }
     };

@@ -5,7 +5,7 @@
       "http://demo.geo-solutions.it/geoserver",
       "https://demo.geo-solutions.it:443/geoserver",
       "https://demo.geo-solutions.it/geoserver",
-      "https://nominatim.openstreetmap.org",
+      "https://nominatim.openstreetmap.org1",
       "http://cloudsdi.geo-solutions.it",
       "https://gs-stable.geo-solutions.it/geoserver",
       "https://gs-stable.geo-solutions.it:443/geoserver",
@@ -64,6 +64,12 @@
       "headers": {
         "Authorization": "Bearer ${securityToken}"
       }
+    },
+    {
+        "urlPattern": "http(s)?\\:\\/\\/gs-stable\\.(geo-solutions\\.it|geosolutionsgroup\\.com)(\\:443|\\:80)?\\/geoserver/.*",
+        "params": {
+            "authkey": "${securityToken}"
+        }
     }
   ],
   "monitorState": [],
@@ -552,7 +558,18 @@
         }
       },
       {
-        "name": "Catalog"
+        "name": "Catalog",
+        "cfg": {
+          "serviceTypes": [
+            { "name": "csw", "label": "CSW" },
+            { "name": "cog", "label": "COG" },
+            { "name": "wms", "label": "WMS" },
+            { "name": "wmts", "label": "WMTS" },
+            { "name": "tms", "label": "TMS" },
+            { "name": "wfs", "label": "WFS" },
+            { "name": "3dtiles", "label": "3D Tiles" }
+          ]
+        }
       },
       {
         "name": "About",
