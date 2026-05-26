@@ -55,6 +55,10 @@ const FilterWidgetTOCButton = connect(selector, {
             onClick={() => onClick({
                 widgetType: 'filter',
                 builderEntry: 'toc-icon',
+                // Marks this as a "map filter widget": the filter is bound to a
+                // specific map layer (selected via the TOC) and drives map-only
+                // affordances such as zoom-to-filtered and default-expanded.
+                isMapFilterWidget: true,
                 mapSync: false
             })}
         />

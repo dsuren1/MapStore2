@@ -12,10 +12,16 @@ import { connect } from 'react-redux';
 import moment from 'moment';
 import { Button, Glyphicon, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { applyFilterWidgetInteractions } from '../../actions/interactions';
+import {
+    zoomToFilteredFeatures,
+    openLayerFilterFromCard,
+    exportFilteredDataFromCard
+} from '../../actions/filterWidgetCard';
 import filterWidgetEnhancer from '../../components/widgets/enhancers/filterWidget';
 import LoadingSpinner from '../../components/misc/LoadingSpinner';
 import FilterTitle from '../../components/widgets/builder/wizard/filter/FilterTitle';
 import FilterSelectAllOptions from '../../components/widgets/builder/wizard/filter/FilterSelectAllOptions';
+import FilterPerItemToolbar, { ToolButton } from '../../components/widgets/widget/FilterPerItemToolbar';
 import Message from '../../components/I18N/Message';
 import HTML from '../../components/I18N/HTML';
 import FilterCheckboxList from '../../components/widgets/builder/wizard/filter/FilterCheckboxList';
@@ -223,10 +229,23 @@ const FilterView = ({
     selectableItems = [],
     onSelectableItemsChange = () => {},
     fetchError = false,
-    perItemToolbar = null,
-    collapseTool = null,
-    collapsed: isCollapsed
+    // Per-widget context. When present, FilterView renders the per-filter
+    // toolbar (zoom/export/open-layer-filter/toggle-disabled) and the
+    // collapse chevron. Absent in builder previews (FilterList) where the
+    // widget id / dispatch / actions are not available.
+    widgetId,
+    widgetTarget = 'floating',
+    allFilters,
+    updateProperty,
+    dispatch,
+    // true = "map filter widget" (TOC origin, bound to a map layer): renders
+    // the per-filter card toolbar (zoom / open layer filter / export /
+    // toggle-disabled). When false, the toolbar is hidden because those map-
+    // bound actions don't apply.
+    isMapFilterWidget = false
 }) => {
+    const isInsideWidget = !!widgetId;
+    const showItemToolbar = isInsideWidget && isMapFilterWidget;
     const layout = filterData?.layout ?? {};
     const Component = componentMap[layout.variant ?? 'checkbox'];
     const showUnsupportedVariantWarning = !Component;
@@ -242,6 +261,56 @@ const FilterView = ({
     const selectionSyncTimeoutRef = useRef(null);
     const currentSelection = Array.isArray(selections) ? selections : [];
     const filterDisabled = !!filterData?.disabled;
+
+    // Per-filter collapsed UI state. Seeded once from layout.defaultExpanded;
+    // user toggles override the default until the widget is re-mounted.
+    const [isCollapsed, setIsCollapsed] = useState(
+        () => (filterData?.layout?.defaultExpanded === false)
+    );
+    const handleToggleCollapse = useCallback(
+        () => setIsCollapsed(prev => !prev),
+        []
+    );
+
+    const reapplyInteractions = useCallback((filterId) => {
+        if (dispatch && widgetId) {
+            // Defer so the reducer has processed the preceding UPDATE_PROPERTY.
+            setTimeout(() => {
+                dispatch(applyFilterWidgetInteractions(widgetId, widgetTarget, filterId));
+            }, 0);
+        }
+    }, [dispatch, widgetId, widgetTarget]);
+
+    const handleToggleDisabled = useCallback((nextDisabled) => {
+        if (!updateProperty || !widgetId || !Array.isArray(allFilters)) {
+            return;
+        }
+        const updatedFilters = allFilters.map(f => (
+            f.id === filterData?.id ? { ...f, disabled: !!nextDisabled } : f
+        ));
+        updateProperty(widgetId, 'filters', updatedFilters);
+        // Selections are intentionally preserved when toggling disabled:
+        // re-enabling restores the filter contribution without re-picking.
+        reapplyInteractions(filterData?.id);
+    }, [updateProperty, widgetId, allFilters, filterData?.id, reapplyInteractions]);
+
+    const handleZoom = useCallback(() => {
+        if (dispatch && widgetId && filterData?.id) {
+            dispatch(zoomToFilteredFeatures(widgetId, filterData.id, widgetTarget));
+        }
+    }, [dispatch, widgetId, filterData?.id, widgetTarget]);
+
+    const handleOpenLayerFilter = useCallback(() => {
+        if (dispatch && widgetId && filterData?.id) {
+            dispatch(openLayerFilterFromCard(widgetId, filterData.id, widgetTarget));
+        }
+    }, [dispatch, widgetId, filterData?.id, widgetTarget]);
+
+    const handleExport = useCallback(() => {
+        if (dispatch && widgetId && filterData?.id) {
+            dispatch(exportFilteredDataFromCard(widgetId, filterData.id, widgetTarget));
+        }
+    }, [dispatch, widgetId, filterData?.id, widgetTarget]);
 
     useEffect(() => {
         if (typeof onSelectableItemsChange === 'function') {
@@ -406,6 +475,31 @@ const FilterView = ({
     };
 
     const showNoTargetsInfoTool = showNoTargetsInfo ?? layout.showNoTargetsInfo ?? true;
+    const allowZoom = layout.allowZoomToFiltered !== false;
+    // When the title is hidden there is no row to anchor a collapse affordance,
+    // so force the filter open and suppress the chevron entirely.
+    const effectiveCollapsed = showTitle ? isCollapsed : false;
+    const collapseTool = (isInsideWidget && showTitle) ? (
+        <ToolButton
+            glyph={effectiveCollapsed ? 'chevron-right' : 'chevron-down'}
+            tooltipKey={effectiveCollapsed
+                ? 'widgets.filterWidget.expandFilter'
+                : 'widgets.filterWidget.collapseFilter'}
+            tooltipId={`flt-c-${filterData.id}`}
+            onClick={handleToggleCollapse}
+            className="ms-filter-collapse-toggle"
+        />
+    ) : null;
+    const perItemToolbar = showItemToolbar ? (
+        <FilterPerItemToolbar
+            filterData={filterData}
+            collapsed={effectiveCollapsed}
+            onToggleDisabled={handleToggleDisabled}
+            onZoom={allowZoom ? handleZoom : undefined}
+            onOpenLayerFilter={handleOpenLayerFilter}
+            onExport={handleExport}
+        />
+    ) : null;
     return (
         <div className={['ms-filter-builder-mock-previews', className].filter(Boolean).join(' ')} style={containerStyle}>
             {loading && (
@@ -427,13 +521,27 @@ const FilterView = ({
             <div className="ms-filter-selector-header">
                 {collapseTool}
                 {showTitle
-                    ? <FilterTitle
-                        key={filterData.id + '-title'}
-                        filterLabel={layout.label}
-                        filterIcon={layout.icon}
-                        filterNameStyle={titleStyle}
-                        className="ms-filter-title"
-                    />
+                    ? (
+                        <span
+                            key={filterData.id + '-title'}
+                            className="ms-filter-title-wrap"
+                        >
+                            <FilterTitle
+                                filterLabel={layout.label}
+                                filterIcon={layout.icon}
+                                filterNameStyle={titleStyle}
+                                className="ms-filter-title"
+                            />
+                            {layout.description ? (
+                                <InfoPopover
+                                    glyph="info-sign"
+                                    placement="top"
+                                    popoverStyle={{ maxWidth: 450 }}
+                                    text={layout.description}
+                                />
+                            ) : null}
+                        </span>
+                    )
                     : <span
                         className="ms-filter-title"
                         key={filterData.id + '-title'}
@@ -495,16 +603,19 @@ const FilterView = ({
                         : null
                 }
 
-                {showSelectAll && !showUnsupportedVariantWarning && !disableMapTimeSelection && !isCollapsed && !filterDisabled && (<FilterSelectAllOptions
-                    key={filterData.id + '-select-all'}
-                    items={selectableItems}
-                    selectedValues={selections || []}
-                    onSelectionChange={onSelectionChange}
-                    selectionMode={layout.selectionMode}
-                    allowEmptySelection={!forceSelection}
-                />)
-                }
-                {perItemToolbar}
+                <div className="ms-filter-actions-wrap">
+                    {showSelectAll && !showUnsupportedVariantWarning && !disableMapTimeSelection && !effectiveCollapsed && !filterDisabled && (
+                        <FilterSelectAllOptions
+                            key={filterData.id + '-select-all'}
+                            items={selectableItems}
+                            selectedValues={selections || []}
+                            onSelectionChange={onSelectionChange}
+                            selectionMode={layout.selectionMode}
+                            allowEmptySelection={!forceSelection}
+                        />
+                    )}
+                    {perItemToolbar}
+                </div>
             </div>
             {disableMapTimeSelection ? (
                 <MapTimeRangeDisabledInfo />
@@ -518,7 +629,7 @@ const FilterView = ({
                             <Message msgId="widgets.filterWidget.sliderSingleItemError" />
                         </div>
                     </div>
-                ) : !isCollapsed && (
+                ) : !effectiveCollapsed && (
                     <div style={filterDisabled ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
                         <Component
                             key={filterData.id}
@@ -581,9 +692,12 @@ FilterView.propTypes = {
     syncCurrentTime: PropTypes.bool,
     timelineRangeEnabled: PropTypes.bool,
     currentTime: PropTypes.string,
-    perItemToolbar: PropTypes.node,
-    collapseTool: PropTypes.node,
-    collapsed: PropTypes.bool
+    widgetId: PropTypes.string,
+    widgetTarget: PropTypes.string,
+    allFilters: PropTypes.array,
+    updateProperty: PropTypes.func,
+    dispatch: PropTypes.func,
+    isMapFilterWidget: PropTypes.bool
 };
 FilterView.defaultProps = {};
 

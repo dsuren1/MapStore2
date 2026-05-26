@@ -1201,6 +1201,9 @@ describe('Test WidgetsUtils', () => {
         it('includes builderEntry so the transient TOC entry flag survives editor merges', () => {
             expect(FILTER_PROPS.indexOf('builderEntry')).toBeGreaterThanOrEqualTo(0);
         });
+        it('includes isMapFilterWidget so the persistent map-filter flag survives editor merges', () => {
+            expect(FILTER_PROPS.indexOf('isMapFilterWidget')).toBeGreaterThanOrEqualTo(0);
+        });
         it('still exposes the core filter widget keys', () => {
             ['filters', 'selections', 'interactions', 'title', 'description'].forEach(key => {
                 expect(FILTER_PROPS.indexOf(key)).toBeGreaterThanOrEqualTo(0);

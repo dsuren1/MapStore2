@@ -158,7 +158,11 @@ const FilterLayoutTab = ({
     onEditorChange = () => {},
     selections = {},
     selectableItems = [],
-    interactions = []
+    interactions = [],
+    // true when the parent filter widget is a "map filter widget" (TOC
+    // origin, bound to a map layer). Drives visibility of map-only layout
+    // options (default expanded, zoom to filtered features).
+    isMapFilterWidget = false
 }) => {
     const layout = data?.layout || {};
     const filterItems = Array.isArray(selectableItems) ? selectableItems : [];
@@ -309,6 +313,20 @@ const FilterLayoutTab = ({
                                         placeholder="Enter label for title..."
                                         onChange={(e) => {
                                             onChange('layout.label', e.target.value);
+                                        }}
+                                    />
+                                </InputGroup>
+                            </FormGroup>
+                            <FormGroup className="form-group-flex">
+                                <ControlLabel><Message msgId="widgets.filterWidget.description" /></ControlLabel>
+                                <InputGroup>
+                                    <LocalizedFormControl
+                                        componentClass="textarea"
+                                        rows={2}
+                                        value={layout.description || ''}
+                                        placeholder="widgets.filterWidget.descriptionPlaceholder"
+                                        onChange={(e) => {
+                                            onChange('layout.description', e.target.value);
                                         }}
                                     />
                                 </InputGroup>
@@ -623,34 +641,38 @@ const FilterLayoutTab = ({
                                     )}
                                 </>
                             )}
-                            <FormGroup className="form-group-flex">
-                                <ControlLabel>
-                                    <Message msgId="widgets.filterWidget.defaultExpanded" />&nbsp;
-                                    <InfoPopover
-                                        placement="top"
-                                        text={<Message msgId="widgets.filterWidget.defaultExpandedTooltip" />}
-                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                            {isMapFilterWidget && (
+                                <FormGroup className="form-group-flex">
+                                    <ControlLabel>
+                                        <Message msgId="widgets.filterWidget.defaultExpanded" />&nbsp;
+                                        <InfoPopover
+                                            placement="top"
+                                            text={<Message msgId="widgets.filterWidget.defaultExpandedTooltip" />}
+                                            iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                                        />
+                                    </ControlLabel>
+                                    <Checkbox
+                                        checked={layout.defaultExpanded !== false}
+                                        onChange={() => onChange('layout.defaultExpanded', !(layout.defaultExpanded !== false))}
                                     />
-                                </ControlLabel>
-                                <Checkbox
-                                    checked={layout.defaultExpanded !== false}
-                                    onChange={() => onChange('layout.defaultExpanded', !(layout.defaultExpanded !== false))}
-                                />
-                            </FormGroup>
-                            <FormGroup className="form-group-flex">
-                                <ControlLabel>
-                                    <Message msgId="widgets.filterWidget.allowZoomToFiltered" />&nbsp;
-                                    <InfoPopover
-                                        placement="top"
-                                        text={<Message msgId="widgets.filterWidget.allowZoomToFilteredTooltip" />}
-                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                                </FormGroup>
+                            )}
+                            {isMapFilterWidget && (
+                                <FormGroup className="form-group-flex">
+                                    <ControlLabel>
+                                        <Message msgId="widgets.filterWidget.zoomToFiltered" />&nbsp;
+                                        <InfoPopover
+                                            placement="top"
+                                            text={<Message msgId="widgets.filterWidget.allowZoomToFilteredTooltip" />}
+                                            iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                                        />
+                                    </ControlLabel>
+                                    <Checkbox
+                                        checked={layout.allowZoomToFiltered !== false}
+                                        onChange={() => onChange('layout.allowZoomToFiltered', !(layout.allowZoomToFiltered !== false))}
                                     />
-                                </ControlLabel>
-                                <Checkbox
-                                    checked={layout.allowZoomToFiltered !== false}
-                                    onChange={() => onChange('layout.allowZoomToFiltered', !(layout.allowZoomToFiltered !== false))}
-                                />
-                            </FormGroup>
+                                </FormGroup>
+                            )}
                         </div>
                     </Collapse>
                 )}

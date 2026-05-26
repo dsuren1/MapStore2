@@ -95,9 +95,12 @@ const FilterWizard = ({
         setValid(isConfigValid && isSelectionValid && isCustomFilterValid);
     }, [editorData, setValid]);
 
+    const isMapFilterWidget = editorData?.isMapFilterWidget
+        ?? (builderEntry === 'toc-icon');
+
     const tabContents = {
         data: <FilterDataTab data={filterData} onChange={onChange} onOpenLayerSelector={onOpenLayerSelector} openFilterEditor={openFilterEditor} onEditorChange={onEditorChange} dashBoardEditing={dashBoardEditing} builderEntry={builderEntry} selections={selections} interactions={editorData?.interactions || []} />,
-        layout: <FilterLayoutTab data={filterData} onChange={onChange} selections={selections} onEditorChange={onEditorChange} selectableItems={selectableItems} interactions={editorData?.interactions || []}/>,
+        layout: <FilterLayoutTab data={filterData} onChange={onChange} selections={selections} onEditorChange={onEditorChange} selectableItems={selectableItems} interactions={editorData?.interactions || []} isMapFilterWidget={isMapFilterWidget}/>,
         actions: <FilterActionsTab data={filterData} onChange={onChange} onEditorChange={onEditorChange}  />
     };
 

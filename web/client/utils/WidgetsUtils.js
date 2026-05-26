@@ -229,7 +229,7 @@ export const getDefaultAggregationOperations = () => {
 };
 
 export const CHART_PROPS = ["selectedChartId", "selectedTraceId", "id", "mapSync", "widgetType", "charts", "dependenciesMap", "dataGrid", "title", "description"];
-export const FILTER_PROPS = ["selectedFilterId", "id", "widgetType", "filters", "selections", "dataGrid", "title", "description", "interactions", "builderEntry"];
+export const FILTER_PROPS = ["selectedFilterId", "id", "widgetType", "filters", "selections", "dataGrid", "title", "description", "interactions", "builderEntry", "isMapFilterWidget"];
 
 const legacyColorsMap = {
     'global.colors.blue': '#0888A1',

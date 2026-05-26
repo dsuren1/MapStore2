@@ -78,7 +78,16 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
     const widgetId = widget.id || uuid();
     // builderEntry is a transient editor-only flag (e.g. 'toc-icon') used to drive
     // the wizard UI; it must not be persisted on the saved widget.
-    const { builderEntry, ...persisted } = widget; // eslint-disable-line no-unused-vars
+    const { builderEntry, ...persisted } = widget;
+    // Persistent flag that marks a filter widget as a "map filter widget":
+    // the filter is bound to a specific map layer (created from the TOC
+    // filter icon). It enables map-only affordances such as zoom-to-filtered,
+    // default-expanded and the per-filter card toolbar. Defaults to false so
+    // generic filter widgets (created from the widget builder) keep a leaner
+    // UI without map-specific actions.
+    const isMapFilterWidget = widget?.widgetType === 'filter'
+        ? (widget.isMapFilterWidget ?? (builderEntry === 'toc-icon'))
+        : widget?.isMapFilterWidget;
     return {
         type: INSERT,
         target,
@@ -86,7 +95,8 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
         // Ensure widget object also has the ID set (preserves existing ID)
         widget: {
             ...persisted,
-            id: widgetId
+            id: widgetId,
+            ...(isMapFilterWidget !== undefined ? { isMapFilterWidget } : {})
         }
     };
 };
