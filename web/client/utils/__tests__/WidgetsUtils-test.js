@@ -9,6 +9,7 @@
 import expect from 'expect';
 
 import {
+    FILTER_PROPS,
     convertDependenciesMappingForCompatibility, editorChange, editorChangeProps,
     getConnectionList, getDependantWidget,
     getChartAxisDependencyPath, getMapDependencyPath, getTracesDependencyPath, getSelectedWidgetData, getWidgetDependency,
@@ -1243,6 +1244,17 @@ describe('Test WidgetsUtils', () => {
             const error = { status: 404 };
             const result = getErrorMessageId(error);
             expect(result).toBe("dashboard.errors.loading.dashboardDoesNotExist");
+        });
+    });
+
+    describe('FILTER_PROPS', () => {
+        it('includes builderEntry so the transient TOC entry flag survives editor merges', () => {
+            expect(FILTER_PROPS.indexOf('builderEntry')).toBeGreaterThanOrEqualTo(0);
+        });
+        it('still exposes the core filter widget keys', () => {
+            ['filters', 'selections', 'interactions', 'title', 'description'].forEach(key => {
+                expect(FILTER_PROPS.indexOf(key)).toBeGreaterThanOrEqualTo(0);
+            });
         });
     });
 

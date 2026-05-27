@@ -991,6 +991,15 @@ export const applyFilterWidgetInteractionsEpic = (action$, store) => {
             const selections = filterWidget.selections || {};
             const filters = filterWidget.filters || [];
 
+            // disabled filters skip CQL composition entirely: selections are
+            // preserved in widget state so the user can re-enable without
+            // losing them, but the disabled flag suppresses both the
+            // matchingFilter contribution and any noSelectionMode
+            // (exclude/custom) so the target layer's previously applied CQL
+            // from this filter is cleared.
+            const targetFilter = filters.find(f => f.id === filterId);
+            const isTargetFilterDisabled = targetFilter?.disabled === true;
+
             // Process interactions sequentially using concatMap
             return Rx.Observable.from(pluggedInteractions)
                 .switchMap(interaction => {
@@ -1026,12 +1035,12 @@ export const applyFilterWidgetInteractionsEpic = (action$, store) => {
 
                     // Find the specific filter and process it to CQL
                     const filterSelections = selections[filterId];
-                    const matchingFilter = filter ? processFilterToCQL(filter, filterSelections) : null;
+                    const matchingFilter = (filter && !isTargetFilterDisabled) ? processFilterToCQL(filter, filterSelections) : null;
 
                     const noSelectionMode = filter?.data?.noSelectionMode ?? FILTER_SELECTION_MODES.NO_FILTER;
                     const hasDefaultFilter = filter?.data?.defaultFilter;
                     let noSelectionFilterCql = null;
-                    if ((!filterSelections || filterSelections.length === 0) && filter) {
+                    if ((!filterSelections || filterSelections.length === 0) && filter && !isTargetFilterDisabled) {
                         if (noSelectionMode === FILTER_SELECTION_MODES.EXCLUDE) {
                             noSelectionFilterCql = buildExcludeCQLFilter(filter.id);
                         } else if (noSelectionMode === FILTER_SELECTION_MODES.CUSTOM && hasDefaultFilter) {

@@ -7,7 +7,7 @@
  */
 import expect from 'expect';
 
-import { testEpic } from './epicTestUtils';
+import { testEpic, addTimeoutEpic, TEST_TIMEOUT } from './epicTestUtils';
 import { applyFilterWidgetInteractionsEpic, cleanupAndReapplyFilterWidgetInteractionsEpic } from '../interactions';
 import {  applyFilterWidgetInteractions } from '../../actions/interactions';
 import { UPDATE_PROPERTY, DELETE, insertWidget } from '../../actions/widgets';
@@ -167,6 +167,52 @@ describe('interactions epics', () => {
                     expect(layerFilter.spatialField).toBeTruthy();
                     expect(Array.isArray(layerFilter.filters)).toBe(true);
                     expect(layerFilter.filters.length).toBeGreaterThan(0);
+                },
+                state,
+                done
+            );
+        });
+
+        it('disabled filter behaves like a cleared filter: emits update with empty interactionFilters', (done) => {
+            // Disabling a filter must reset its contribution: empty selections
+            // and no noSelectionMode applied so any previously applied CQL on
+            // the target layer/widget is cleared.
+            const filterWidget = makeFilterWidget({
+                filters: [{
+                    id: FILTER_ID,
+                    disabled: true,
+                    data: {
+                        dataSource: 'features',
+                        valuesFrom: 'grouped',
+                        valueAttribute: 'STATE_NAME',
+                        noSelectionMode: 'exclude'
+                    }
+                }],
+                selections: { [FILTER_ID]: [] },
+                interactions: [{
+                    id: 'int-2',
+                    plugged: true,
+                    targetType: 'applyFilter',
+                    source: { nodePath: `root.widgets[${FILTER_WIDGET_ID}].filters[${FILTER_ID}]` },
+                    target: { nodePath: `root.widgets[${TABLE_WIDGET_ID}]` }
+                }]
+            });
+            const tableWidget = makeTableWidget();
+            const state = makeState([filterWidget, tableWidget]);
+
+            testEpic(
+                addTimeoutEpic(applyFilterWidgetInteractionsEpic, 100),
+                2,
+                [applyFilterWidgetInteractions(FILTER_WIDGET_ID, 'floating', FILTER_ID)],
+                (actions) => {
+                    const update = actions.find(a => a.type === UPDATE_PROPERTY);
+                    expect(update).toBeTruthy();
+                    expect(update.id).toBe(TABLE_WIDGET_ID);
+                    expect(update.key).toBe('interactionFilters');
+                    // disabled => no contribution from this filter even when
+                    // noSelectionMode would otherwise produce an exclude-CQL.
+                    expect(Array.isArray(update.value)).toBe(true);
+                    expect(update.value.length).toBe(0);
                 },
                 state,
                 done

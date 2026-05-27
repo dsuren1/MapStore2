@@ -105,6 +105,19 @@ describe('Test correctness of the widgets actions', () => {
         expect(retval.deletedInteractions).toBe(deletedInteractions);
         expect(retval.widget.deletedInteractions).toBeFalsy();
     });
+    it('insertWidget strips the transient builderEntry flag from the persisted widget', () => {
+        const widget = {
+            widgetType: 'filter',
+            builderEntry: 'toc-icon',
+            title: 'My Filter'
+        };
+        const retval = insertWidget(widget);
+        expect(retval).toExist();
+        expect(retval.type).toBe(INSERT);
+        expect(retval.widget.builderEntry).toBe(undefined);
+        expect(retval.widget.title).toBe('My Filter');
+        expect(retval.widget.widgetType).toBe('filter');
+    });
     it('updateWidget', () => {
         const widget = {};
         const retval = updateWidget(widget);

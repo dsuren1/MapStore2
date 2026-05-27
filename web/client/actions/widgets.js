@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import uuid from 'uuid/v1';
+import omit from 'lodash/omit';
 
 export const INSERT = "WIDGETS:INSERT";
 export const NEW = "WIDGETS:NEW";
@@ -92,7 +93,7 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
         id: widgetId,
         // Ensure widget object also has the ID set (preserves existing ID)
         widget: {
-            ...widgetToPersist,
+            ...omit(widgetToPersist, 'builderEntry'),
             id: widgetId
         }
     };

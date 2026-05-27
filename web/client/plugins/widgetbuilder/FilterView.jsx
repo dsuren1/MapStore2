@@ -222,7 +222,10 @@ const FilterView = ({
     missingParameters = false,
     selectableItems = [],
     onSelectableItemsChange = () => {},
-    fetchError = false
+    fetchError = false,
+    perItemToolbar = null,
+    collapseTool = null,
+    collapsed: isCollapsed
 }) => {
     const layout = filterData?.layout ?? {};
     const Component = componentMap[layout.variant ?? 'checkbox'];
@@ -238,6 +241,7 @@ const FilterView = ({
     const showSliderSingleItemError = layout.variant === 'slider' && selectableItems?.length === 1;
     const selectionSyncTimeoutRef = useRef(null);
     const currentSelection = Array.isArray(selections) ? selections : [];
+    const filterDisabled = !!filterData?.disabled;
 
     useEffect(() => {
         if (typeof onSelectableItemsChange === 'function') {
@@ -421,7 +425,7 @@ const FilterView = ({
                 </div>
             )}
             <div className="ms-filter-selector-header">
-
+                {collapseTool}
                 {showTitle
                     ? <FilterTitle
                         key={filterData.id + '-title'}
@@ -491,7 +495,7 @@ const FilterView = ({
                         : null
                 }
 
-                {showSelectAll && !showUnsupportedVariantWarning && !disableMapTimeSelection && (<FilterSelectAllOptions
+                {showSelectAll && !showUnsupportedVariantWarning && !disableMapTimeSelection && !isCollapsed && !filterDisabled && (<FilterSelectAllOptions
                     key={filterData.id + '-select-all'}
                     items={selectableItems}
                     selectedValues={selections || []}
@@ -500,6 +504,7 @@ const FilterView = ({
                     allowEmptySelection={!forceSelection}
                 />)
                 }
+                {perItemToolbar}
             </div>
             {disableMapTimeSelection ? (
                 <MapTimeRangeDisabledInfo />
@@ -513,16 +518,17 @@ const FilterView = ({
                             <Message msgId="widgets.filterWidget.sliderSingleItemError" />
                         </div>
                     </div>
-                ) : (
-                    <Component
-                        key={filterData.id}
-                        items={selectableItems}
-                        selectionMode={layout.selectionMode}
-                        selectedValues={selections || []}
-                        onSelectionChange={onChangeSelections}
-                        {...getLayoutProps()}
-                    />
-                )
+                ) : !isCollapsed && (
+                    <div style={filterDisabled ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
+                        <Component
+                            key={filterData.id}
+                            items={selectableItems}
+                            selectionMode={layout.selectionMode}
+                            selectedValues={selections || []}
+                            onSelectionChange={onChangeSelections}
+                            {...getLayoutProps()}
+                        />
+                    </div>)
             ) : (
                 !loading ? <FilterNoSelectableItems className="ms-filter-view-no-selectable-items" /> : null
             )}
@@ -555,13 +561,15 @@ FilterView.propTypes = {
     filterData: PropTypes.shape({
         id: PropTypes.string.isRequired,
         label: PropTypes.string,
+        disabled: PropTypes.bool,
         layout: PropTypes.shape({
             variant: PropTypes.string.isRequired,
             icon: PropTypes.string,
             selectionMode: PropTypes.string,
             direction: PropTypes.oneOf(['horizontal', 'vertical']),
             maxHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        })
+        }),
+        data: PropTypes.object
     }),
     selections: PropTypes.array,
     onSelectionChange: PropTypes.func,
@@ -572,7 +580,10 @@ FilterView.propTypes = {
     fetchError: PropTypes.bool,
     syncCurrentTime: PropTypes.bool,
     timelineRangeEnabled: PropTypes.bool,
-    currentTime: PropTypes.string
+    currentTime: PropTypes.string,
+    perItemToolbar: PropTypes.node,
+    collapseTool: PropTypes.node,
+    collapsed: PropTypes.bool
 };
 FilterView.defaultProps = {};
 

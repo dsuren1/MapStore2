@@ -638,6 +638,34 @@ const FilterLayoutTab = ({
                                     )}
                                 </>
                             )}
+                            <FormGroup className="form-group-flex">
+                                <ControlLabel>
+                                    <Message msgId="widgets.filterWidget.defaultExpanded" />&nbsp;
+                                    <InfoPopover
+                                        placement="top"
+                                        text={<Message msgId="widgets.filterWidget.defaultExpandedTooltip" />}
+                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                                    />
+                                </ControlLabel>
+                                <Checkbox
+                                    checked={layout.defaultExpanded !== false}
+                                    onChange={() => onChange('layout.defaultExpanded', !(layout.defaultExpanded !== false))}
+                                />
+                            </FormGroup>
+                            <FormGroup className="form-group-flex">
+                                <ControlLabel>
+                                    <Message msgId="widgets.filterWidget.allowZoomToFiltered" />&nbsp;
+                                    <InfoPopover
+                                        placement="top"
+                                        text={<Message msgId="widgets.filterWidget.allowZoomToFilteredTooltip" />}
+                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
+                                    />
+                                </ControlLabel>
+                                <Checkbox
+                                    checked={layout.allowZoomToFiltered !== false}
+                                    onChange={() => onChange('layout.allowZoomToFiltered', !(layout.allowZoomToFiltered !== false))}
+                                />
+                            </FormGroup>
                         </div>
                     </Collapse>
                 )}
