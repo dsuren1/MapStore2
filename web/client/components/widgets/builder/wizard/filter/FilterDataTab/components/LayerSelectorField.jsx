@@ -31,13 +31,13 @@ const LayerSelectorField = ({
     onFilterLayer = () => {},
     onOpenLayerSelector,
     dashBoardEditing = false,
-    builderEntry,
+    isMapFilterWidget = false,
     hideFilter = false
 }) => {
     const layerTitle = getLayerTitle(layer);
-    // when the builder is opened from the TOC icon we allow the user to change
-    // the source layer just like the dashboard editing flow does.
-    const allowLayerChange = dashBoardEditing || builderEntry === 'toc-icon';
+    // map filter widgets (TOC entry) allow re-selecting the source layer just
+    // like the dashboard editing flow does.
+    const allowLayerChange = dashBoardEditing || isMapFilterWidget;
     const isDisabled = !allowLayerChange && layer;
     const validationState = layerIsRequired && !layer ? 'error' : null;
 
@@ -94,7 +94,7 @@ LayerSelectorField.propTypes = {
     showEditFilter: PropTypes.bool,
     filter: PropTypes.object,
     dashBoardEditing: PropTypes.bool,
-    builderEntry: PropTypes.string,
+    isMapFilterWidget: PropTypes.bool,
     hideFilter: PropTypes.bool
 };
 

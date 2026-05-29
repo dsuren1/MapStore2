@@ -126,7 +126,7 @@ describe('FilterWidgetTOCButton plugin', () => {
         expect(btns[0].getAttribute('data-tooltip')).toBe('toc.createFilterWidget');
     });
 
-    it('clicking the button dispatches createWidget with widgetType=filter and builderEntry=toc-icon', () => {
+    it('clicking the button dispatches createWidget with widgetType=filter and isMapFilterWidget=true', () => {
         const { store, dispatched } = makeStore();
         ReactDOM.render(
             <Provider store={store}>
@@ -143,7 +143,8 @@ describe('FilterWidgetTOCButton plugin', () => {
         expect(dispatched.length).toBe(1);
         expect(dispatched[0].type).toBe(NEW);
         expect(dispatched[0].widget.widgetType).toBe('filter');
-        expect(dispatched[0].widget.builderEntry).toBe('toc-icon');
+        expect(dispatched[0].widget.isMapFilterWidget).toBe(true);
+        expect(dispatched[0].widget.builderEntry).toBe(undefined);
     });
 
     it('respects activateFilterWidgetButton config flag (false hides the button)', () => {

@@ -71,7 +71,7 @@ describe('FilterDataTab component', () => {
         expect(container.querySelector('textarea')).toNotExist();
     });
 
-    it('passes builderEntry through to LayerSelectorField so the field is editable', () => {
+    it('passes isMapFilterWidget through to LayerSelectorField so the field is editable', () => {
         ReactDOM.render(
             <FilterDataTab
                 data={{
@@ -85,14 +85,14 @@ describe('FilterDataTab component', () => {
                 onChange={() => {}}
                 onOpenLayerSelector={() => {}}
                 onEditorChange={() => {}}
-                builderEntry="toc-icon"
+                isMapFilterWidget
             />,
             document.getElementById('container')
         );
         const container = document.getElementById('container');
         const layerInput = container.querySelector('input[type="text"]');
         expect(layerInput).toExist();
-        // when builderEntry === 'toc-icon' the input must NOT be disabled
+        // when isMapFilterWidget is true the input must NOT be disabled
         expect(layerInput.disabled).toBe(false);
     });
 });

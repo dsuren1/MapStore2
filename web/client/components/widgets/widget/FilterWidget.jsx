@@ -5,20 +5,14 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 
 import WidgetContainer from './WidgetContainer';
 import FilterView from '../../../plugins/widgetbuilder/FilterView';
-import FilterPerItemToolbar, { ToolButton } from './FilterPerItemToolbar';
 import { applyFilterWidgetInteractions } from '../../../actions/interactions';
-import {
-    zoomToFilteredFeatures,
-    openLayerFilterFromCard,
-    exportFilteredDataFromCard
-} from '../../../actions/filterWidgetCard';
 import './filter-widget.less';
 import { interactionTargetVisibilitySelector, interactionTargetsFilterDisabledSelector, getApplyStyleOutOfSyncForFilterWidget, getApplyDimensionOutOfSyncForFilterWidget, inactiveInteractionIdsForWidgetSelector } from '../../../selectors/widgets';
 import { currentTimeSelector, offsetEnabledSelector } from '../../../selectors/dimension';
@@ -52,6 +46,11 @@ const FilterWidget = ({
     confirmDelete = false,
     onDelete = () => {},
     dispatch,
+    // true when the filter widget is a "map filter widget" (created from the
+    // TOC filter icon and bound to a map layer). Enables map-only affordances
+    // such as zoom-to-filtered, default-expanded and the per-filter toolbar.
+    // Defaults to false: generic filter widgets show the leaner UI.
+    isMapFilterWidget = false,
     target = 'floating' // Default target container
 } = {}) => {
 
@@ -66,66 +65,6 @@ const FilterWidget = ({
             setTimeout(() => {
                 dispatch(applyFilterWidgetInteractions(id, target, filterId));
             }, 0);
-        }
-    };
-
-    // Per-filter collapsed UI state.
-    // Seeded once from layout.defaultExpanded; user toggles override the default
-    // until widget is re-mounted (e.g. on map reload).
-    const initialCollapsed = useMemo(() => filters.reduce((acc, f) => {
-        acc[f.id] = f?.layout?.defaultExpanded === false;
-        return acc;
-    }, {}), []); // eslint-disable-line react-hooks/exhaustive-deps
-    const [collapsedMap, setCollapsedMap] = useState(initialCollapsed);
-
-    // Keep collapsed map in sync when filters are added or removed.
-    useEffect(() => {
-        setCollapsedMap(prev => {
-            const next = { ...prev };
-            const ids = new Set(filters.map(f => f.id));
-            Object.keys(next).forEach(k => { if (!ids.has(k)) { delete next[k]; } });
-            filters.forEach(f => {
-                if (next[f.id] === undefined) {
-                    next[f.id] = f?.layout?.defaultExpanded === false;
-                }
-            });
-            return next;
-        });
-    }, [filters]);
-
-    const handleToggleCollapse = (filterId) => () => {
-        setCollapsedMap(prev => ({ ...prev, [filterId]: !prev[filterId] }));
-    };
-
-    const handleToggleDisabled = (filterId) => (nextDisabled) => {
-        const updatedFilters = filters.map(f => f.id === filterId ? { ...f, disabled: !!nextDisabled } : f);
-        updateProperty(id, 'filters', updatedFilters);
-        // Selections are intentionally preserved when toggling disabled:
-        // re-enabling the filter restores its previous contribution to the
-        // composed interaction CQL without forcing the user to re-pick values.
-        if (dispatch) {
-            // re-apply interactions so disabled state takes effect immediately
-            setTimeout(() => {
-                dispatch(applyFilterWidgetInteractions(id, target, filterId));
-            }, 0);
-        }
-    };
-
-    const handleZoom = (filterId) => () => {
-        if (dispatch) {
-            dispatch(zoomToFilteredFeatures(id, filterId, target));
-        }
-    };
-
-    const handleOpenLayerFilter = (filterId) => () => {
-        if (dispatch) {
-            dispatch(openLayerFilterFromCard(id, filterId, target));
-        }
-    };
-
-    const handleExport = (filterId) => () => {
-        if (dispatch) {
-            dispatch(exportFilteredDataFromCard(id, filterId, target));
         }
     };
 
@@ -156,32 +95,6 @@ const FilterWidget = ({
                             && isMapTimeTarget(interaction?.target?.nodePath)
                             && interaction?.configuration?.twoWaySynchronization === true
                         );
-                        const collapsed = collapsedMap[filter.id] === true;
-                        const allowZoom = filter?.layout?.allowZoomToFiltered !== false;
-                        const toolbar = (
-                            <FilterPerItemToolbar
-                                filterData={filter}
-                                collapsed={collapsed}
-                                onToggleDisabled={handleToggleDisabled(filter.id)}
-                                onZoom={allowZoom ? handleZoom(filter.id) : undefined}
-                                onOpenLayerFilter={handleOpenLayerFilter(filter.id)}
-                                onExport={handleExport(filter.id)}
-                            />
-                        );
-                        // Render the expand/collapse chevron in front of the
-                        // title (and its icon) so users can pre-empt the title
-                        // row visually before reading it.
-                        const collapseTool = (
-                            <ToolButton
-                                glyph={collapsed ? 'chevron-right' : 'chevron-down'}
-                                tooltipKey={collapsed
-                                    ? 'widgets.filterWidget.expandFilter'
-                                    : 'widgets.filterWidget.collapseFilter'}
-                                tooltipId={`flt-c-${filter.id}`}
-                                onClick={handleToggleCollapse(filter.id)}
-                                className="ms-filter-collapse-toggle"
-                            />
-                        );
                         return (<div
                             key={filter.id}
                             className="ms-filter-widget-item"
@@ -202,9 +115,12 @@ const FilterWidget = ({
                                 syncCurrentTime={syncCurrentTime}
                                 timelineRangeEnabled={timelineRangeEnabled}
                                 onSelectionChange={handleSelectionChange(filter.id)}
-                                perItemToolbar={toolbar}
-                                collapseTool={collapseTool}
-                                collapsed={collapsed}
+                                widgetId={id}
+                                widgetTarget={target}
+                                allFilters={filters}
+                                updateProperty={updateProperty}
+                                dispatch={dispatch}
+                                isMapFilterWidget={isMapFilterWidget}
                             />
                         </div>);
                     })

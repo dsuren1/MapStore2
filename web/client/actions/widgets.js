@@ -6,7 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 import uuid from 'uuid/v1';
-import omit from 'lodash/omit';
 
 export const INSERT = "WIDGETS:INSERT";
 export const NEW = "WIDGETS:NEW";
@@ -87,14 +86,21 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
     const { deletedInteractions, hasDeletedInteractions, widgetToPersist } = splitDeletedInteractionsFromWidget(widget);
     // Use existing ID if widget already has one (from editNewWidget), otherwise generate new one
     const widgetId = widgetToPersist.id || uuid();
+    // Filter widgets always carry an explicit isMapFilterWidget boolean so
+    // downstream code (layout tab, FilterView toolbar) can branch without
+    // ambiguity; default to false when omitted.
+    const isMapFilterWidget = widgetToPersist?.widgetType === 'filter'
+        ? !!widgetToPersist.isMapFilterWidget
+        : widgetToPersist?.isMapFilterWidget;
     const action = {
         type: INSERT,
         target,
         id: widgetId,
         // Ensure widget object also has the ID set (preserves existing ID)
         widget: {
-            ...omit(widgetToPersist, 'builderEntry'),
-            id: widgetId
+            ...widgetToPersist,
+            id: widgetId,
+            ...(isMapFilterWidget !== undefined ? { isMapFilterWidget } : {})
         }
     };
     return hasDeletedInteractions

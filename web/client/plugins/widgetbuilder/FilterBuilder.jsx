@@ -61,9 +61,9 @@ const FilterToolbar = compose(
  * in case you don't have a layer selected (e.g. dashboard) the filter builder
  * prompts a catalog view to allow layer selection.
  *
- * When the builder is opened from the TOC icon (builderEntry === 'toc-icon')
- * we list current map layers instead of catalog records so the user picks
- * from layers already in the map.
+ * For map filter widgets (editorData.isMapFilterWidget === true, e.g. created
+ * from the TOC filter icon) we list current map layers instead of catalog
+ * records so the user picks from layers already in the map.
  */
 const chooseLayerEnhancer = compose(
     withState('showLayers', "toggleLayerSelector", false),
@@ -72,7 +72,7 @@ const chooseLayerEnhancer = compose(
     viewportBuilderConnectMask,
     catalogEditorEnhancer,
     branch(
-        ({showLayers, editorData} = {}) => showLayers && editorData?.builderEntry === 'toc-icon',
+        ({showLayers, editorData} = {}) => showLayers && editorData?.isMapFilterWidget === true,
         renderComponent(mapLayerSelector(MapViewLayerSelector))
     ),
     branch(

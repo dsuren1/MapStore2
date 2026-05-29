@@ -63,7 +63,7 @@ const FilterWizard = ({
     openFilterEditor = () => {},
     onEditorChange = () => {},
     dashBoardEditing,
-    builderEntry,
+    isMapFilterWidget = false,
     step = 0,
     setPage = () => {},
     onFinish = () => {},
@@ -96,8 +96,8 @@ const FilterWizard = ({
     }, [editorData, setValid]);
 
     const tabContents = {
-        data: <FilterDataTab data={filterData} onChange={onChange} onOpenLayerSelector={onOpenLayerSelector} openFilterEditor={openFilterEditor} onEditorChange={onEditorChange} dashBoardEditing={dashBoardEditing} builderEntry={builderEntry} selections={selections} interactions={editorData?.interactions || []} />,
-        layout: <FilterLayoutTab data={filterData} onChange={onChange} selections={selections} onEditorChange={onEditorChange} selectableItems={selectableItems} interactions={editorData?.interactions || []}/>,
+        data: <FilterDataTab data={filterData} onChange={onChange} onOpenLayerSelector={onOpenLayerSelector} openFilterEditor={openFilterEditor} onEditorChange={onEditorChange} dashBoardEditing={dashBoardEditing} isMapFilterWidget={isMapFilterWidget} selections={selections} interactions={editorData?.interactions || []} />,
+        layout: <FilterLayoutTab data={filterData} onChange={onChange} selections={selections} onEditorChange={onEditorChange} selectableItems={selectableItems} interactions={editorData?.interactions || []} isMapFilterWidget={isMapFilterWidget}/>,
         actions: <FilterActionsTab data={filterData} onChange={onChange} onEditorChange={onEditorChange}  />
     };
 
