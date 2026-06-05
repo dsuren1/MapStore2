@@ -1248,9 +1248,6 @@ describe('Test WidgetsUtils', () => {
     });
 
     describe('FILTER_PROPS', () => {
-        it('includes isMapFilterWidget so the persistent map-filter flag survives editor merges', () => {
-            expect(FILTER_PROPS.indexOf('isMapFilterWidget')).toBeGreaterThanOrEqualTo(0);
-        });
         it('does not carry the legacy transient builderEntry flag', () => {
             expect(FILTER_PROPS.indexOf('builderEntry')).toBe(-1);
         });

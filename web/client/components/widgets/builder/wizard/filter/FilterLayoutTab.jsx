@@ -158,11 +158,7 @@ const FilterLayoutTab = ({
     onEditorChange = () => {},
     selections = {},
     selectableItems = [],
-    interactions = [],
-    // true when the parent filter widget is a "map filter widget" (TOC
-    // origin, bound to a map layer). Drives visibility of map-only layout
-    // options (default expanded, zoom to filtered features).
-    isMapFilterWidget = false
+    interactions = []
 }) => {
     const layout = data?.layout || {};
     const filterItems = Array.isArray(selectableItems) ? selectableItems : [];
@@ -656,38 +652,36 @@ const FilterLayoutTab = ({
                                     )}
                                 </>
                             )}
-                            {isMapFilterWidget && (
-                                <FormGroup className="form-group-flex">
-                                    <ControlLabel>
-                                        <Message msgId="widgets.filterWidget.defaultExpanded" />&nbsp;
-                                        <InfoPopover
-                                            placement="top"
-                                            text={<Message msgId="widgets.filterWidget.defaultExpandedTooltip" />}
-                                            iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
-                                        />
-                                    </ControlLabel>
-                                    <Checkbox
-                                        checked={layout.defaultExpanded !== false}
-                                        onChange={() => onChange('layout.defaultExpanded', !(layout.defaultExpanded !== false))}
+                            <FormGroup className="form-group-flex">
+                                <ControlLabel>
+                                    <Message msgId="widgets.filterWidget.defaultExpanded" />&nbsp;
+                                    <InfoPopover
+                                        placement="top"
+                                        text={<Message msgId="widgets.filterWidget.defaultExpandedTooltip" />}
+                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
                                     />
-                                </FormGroup>
-                            )}
-                            {isMapFilterWidget && (
-                                <FormGroup className="form-group-flex">
-                                    <ControlLabel>
-                                        <Message msgId="widgets.filterWidget.zoomToFiltered" />&nbsp;
-                                        <InfoPopover
-                                            placement="top"
-                                            text={<Message msgId="widgets.filterWidget.allowZoomToFilteredTooltip" />}
-                                            iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
-                                        />
-                                    </ControlLabel>
-                                    <Checkbox
-                                        checked={layout.allowZoomToFiltered !== false}
-                                        onChange={() => onChange('layout.allowZoomToFiltered', !(layout.allowZoomToFiltered !== false))}
+                                </ControlLabel>
+                                <Checkbox
+                                    checked={layout.defaultExpanded !== false}
+                                    onChange={() => onChange('layout.defaultExpanded', !(layout.defaultExpanded !== false))}
+                                />
+                            </FormGroup>
+                            {/* Temporarily disabled: re-enable to expose the "Zoom to filtered features" layout option.
+                            <FormGroup className="form-group-flex">
+                                <ControlLabel>
+                                    <Message msgId="widgets.filterWidget.zoomToFiltered" />&nbsp;
+                                    <InfoPopover
+                                        placement="top"
+                                        text={<Message msgId="widgets.filterWidget.allowZoomToFilteredTooltip" />}
+                                        iconStyle={{ marginLeft: 8, color: '#999', cursor: 'default' }}
                                     />
-                                </FormGroup>
-                            )}
+                                </ControlLabel>
+                                <Checkbox
+                                    checked={layout.allowZoomToFiltered !== false}
+                                    onChange={() => onChange('layout.allowZoomToFiltered', !(layout.allowZoomToFiltered !== false))}
+                                />
+                            </FormGroup>
+                            */}
                         </div>
                     </Collapse>
                 )}

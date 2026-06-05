@@ -88,7 +88,8 @@ const FilterPerItemToolbar = ({
                     </span>
                 </OverlayTrigger>
             )}
-            {onZoom && (
+            {/* TEMPORARILY HIDDEN: zoom, open-layer-filter and export buttons */}
+            {false && onZoom && (
                 <ToolButton
                     glyph="zoom-to"
                     tooltipKey="widgets.filterWidget.zoomToFiltered"
@@ -97,7 +98,7 @@ const FilterPerItemToolbar = ({
                     onClick={onZoom}
                 />
             )}
-            {onOpenLayerFilter && (
+            {false && onOpenLayerFilter && (
                 <ToolButton
                     glyph="filter"
                     tooltipKey="widgets.filterWidget.openLayerFilter"
@@ -106,7 +107,7 @@ const FilterPerItemToolbar = ({
                     onClick={onOpenLayerFilter}
                 />
             )}
-            {onExport && (
+            {false && onExport && (
                 <ToolButton
                     glyph="download"
                     tooltipKey="widgets.filterWidget.exportFiltered"

@@ -86,12 +86,6 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
     const { deletedInteractions, hasDeletedInteractions, widgetToPersist } = splitDeletedInteractionsFromWidget(widget);
     // Use existing ID if widget already has one (from editNewWidget), otherwise generate new one
     const widgetId = widgetToPersist.id || uuid();
-    // Filter widgets always carry an explicit isMapFilterWidget boolean so
-    // downstream code (layout tab, FilterView toolbar) can branch without
-    // ambiguity; default to false when omitted.
-    const isMapFilterWidget = widgetToPersist?.widgetType === 'filter'
-        ? !!widgetToPersist.isMapFilterWidget
-        : widgetToPersist?.isMapFilterWidget;
     const action = {
         type: INSERT,
         target,
@@ -99,8 +93,7 @@ export const insertWidget = (widget, target = DEFAULT_TARGET) => {
         // Ensure widget object also has the ID set (preserves existing ID)
         widget: {
             ...widgetToPersist,
-            id: widgetId,
-            ...(isMapFilterWidget !== undefined ? { isMapFilterWidget } : {})
+            id: widgetId
         }
     };
     return hasDeletedInteractions

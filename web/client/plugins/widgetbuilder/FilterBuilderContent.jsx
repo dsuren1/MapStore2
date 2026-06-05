@@ -36,8 +36,7 @@ const FilterBuilderContent = ({
         selectedFilterId = null,
         selections = {},
         interactions = [],
-        deletedInteractions = [],
-        isMapFilterWidget
+        deletedInteractions = []
     } = editorData;
 
     // Initialize filters
@@ -206,7 +205,6 @@ const FilterBuilderContent = ({
             openFilterEditor={openFilterEditor}
             onEditorChange={onChangeEditor}
             dashBoardEditing={dashBoardEditing}
-            isMapFilterWidget={isMapFilterWidget}
             step={step}
             setPage={setPage}
             onFinish={onFinish}

@@ -15,7 +15,7 @@ const mapLayerSelectorConnect = connect(() => ({}), {
 });
 
 const mapLayerSelector = compose(
-    setDisplayName('MapViewLayerSelector'),
+    setDisplayName('MapCatalogLayerSelector'),
     mapLayerSelectorConnect
 );
 

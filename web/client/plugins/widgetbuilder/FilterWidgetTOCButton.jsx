@@ -50,15 +50,13 @@ const FilterWidgetTOCButton = connect(selector, {
     return (
         <ItemComponent
             {...props}
-            glyph="filter"
-            tooltipId="toc.createFilterWidget"
+            glyph="widgets"
+            tooltipId="toc.createWidgetForMap"
             onClick={() => onClick({
-                widgetType: 'filter',
-                // Marks this as a "map filter widget": the filter is bound to a
-                // specific map layer (selected via the TOC) and drives map-only
-                // affordances such as zoom-to-filtered and default-expanded.
-                isMapFilterWidget: true,
-                mapSync: false
+                // `mapLayersOnly` makes every builder's layer step list only the
+                // layers currently in the map (single selection) and enables the
+                // editable source-layer field in the filter builder.
+                mapLayersOnly: true
             })}
         />
     );

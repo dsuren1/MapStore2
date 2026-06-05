@@ -237,15 +237,13 @@ const FilterView = ({
     widgetTarget = 'floating',
     allFilters,
     updateProperty,
-    dispatch,
-    // true = "map filter widget" (TOC origin, bound to a map layer): renders
-    // the per-filter card toolbar (zoom / open layer filter / export /
-    // toggle-disabled). When false, the toolbar is hidden because those map-
-    // bound actions don't apply.
-    isMapFilterWidget = false
+    dispatch
 }) => {
     const isInsideWidget = !!widgetId;
-    const showItemToolbar = isInsideWidget && isMapFilterWidget;
+    // The per-filter card toolbar (zoom / open layer filter / export /
+    // toggle-disabled) is shown for every filter widget rendered inside a
+    // widget container (i.e. not in the builder preview).
+    const showItemToolbar = isInsideWidget;
     const layout = filterData?.layout ?? {};
     const Component = componentMap[layout.variant ?? 'checkbox'];
     const showUnsupportedVariantWarning = !Component;
@@ -696,8 +694,7 @@ FilterView.propTypes = {
     widgetTarget: PropTypes.string,
     allFilters: PropTypes.array,
     updateProperty: PropTypes.func,
-    dispatch: PropTypes.func,
-    isMapFilterWidget: PropTypes.bool
+    dispatch: PropTypes.func
 };
 FilterView.defaultProps = {};
 

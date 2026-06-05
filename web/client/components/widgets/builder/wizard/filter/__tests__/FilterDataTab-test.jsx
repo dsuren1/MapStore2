@@ -71,7 +71,7 @@ describe('FilterDataTab component', () => {
         expect(container.querySelector('textarea')).toNotExist();
     });
 
-    it('passes isMapFilterWidget through to LayerSelectorField so the field is editable', () => {
+    it('passes mapLayersOnly through to LayerSelectorField so the field is editable', () => {
         ReactDOM.render(
             <FilterDataTab
                 data={{
@@ -85,14 +85,14 @@ describe('FilterDataTab component', () => {
                 onChange={() => {}}
                 onOpenLayerSelector={() => {}}
                 onEditorChange={() => {}}
-                isMapFilterWidget
+                mapLayersOnly
             />,
             document.getElementById('container')
         );
         const container = document.getElementById('container');
         const layerInput = container.querySelector('input[type="text"]');
         expect(layerInput).toExist();
-        // when isMapFilterWidget is true the input must NOT be disabled
+        // when mapLayersOnly is true the input must NOT be disabled
         expect(layerInput.disabled).toBe(false);
     });
 });

@@ -46,11 +46,6 @@ const FilterWidget = ({
     confirmDelete = false,
     onDelete = () => {},
     dispatch,
-    // true when the filter widget is a "map filter widget" (created from the
-    // TOC filter icon and bound to a map layer). Enables map-only affordances
-    // such as zoom-to-filtered, default-expanded and the per-filter toolbar.
-    // Defaults to false: generic filter widgets show the leaner UI.
-    isMapFilterWidget = false,
     target = 'floating' // Default target container
 } = {}) => {
 
@@ -120,7 +115,6 @@ const FilterWidget = ({
                                 allFilters={filters}
                                 updateProperty={updateProperty}
                                 dispatch={dispatch}
-                                isMapFilterWidget={isMapFilterWidget}
                             />
                         </div>);
                     })

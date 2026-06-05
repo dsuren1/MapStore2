@@ -61,7 +61,7 @@ const FilterDataTab = ({
     dashBoardEditing,
     selections = {},
     interactions = [],
-    isMapFilterWidget = false
+    mapLayersOnly = false
 }) => {
     // Normalize and derive filter data
     const filterDataState = useFilterData(data);
@@ -198,7 +198,7 @@ const FilterDataTab = ({
                 layerIsRequired={filterDataState.layerIsRequired}
                 onOpenLayerSelector={onOpenLayerSelector}
                 dashBoardEditing={dashBoardEditing}
-                isMapFilterWidget={isMapFilterWidget}
+                mapLayersOnly={mapLayersOnly}
                 hideFilter={filterDataState.isUserDefined}
             />
 
@@ -271,7 +271,7 @@ FilterDataTab.propTypes = {
     onEditorChange: PropTypes.func,
     dashBoardEditing: PropTypes.bool,
     interactions: PropTypes.array,
-    isMapFilterWidget: PropTypes.bool
+    mapLayersOnly: PropTypes.bool
 };
 
 export default FilterDataTab;

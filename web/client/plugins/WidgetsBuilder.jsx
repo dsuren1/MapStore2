@@ -22,6 +22,7 @@ import {setControlProperty} from '../actions/controls';
 import {mapLayoutValuesSelector} from '../selectors/maplayout';
 import {widgetBuilderSelector, widgetBuilderAvailable} from '../selectors/controls';
 import { dependenciesSelector, availableDependenciesForEditingWidgetSelector} from '../selectors/widgets';
+import { isWidgetLayerSupported } from '../utils/WidgetsUtils';
 import { toggleConnection, createWidget } from '../actions/widgets';
 import withMapExitButton from './widgetbuilder/enhancers/withMapExitButton';
 import WidgetTypeBuilder from './widgetbuilder/WidgetTypeBuilder';
@@ -130,7 +131,7 @@ const WidgetsBuilderButton = connect((state) => ({ available: widgetBuilderAvail
 }) => {
     const ItemComponent = itemComponent;
     const layer = selectedNodes?.[0]?.node;
-    if (available && [statusTypes.LAYER].includes(status) && layer?.search && layer.search !== 'vector') {
+    if (available && [statusTypes.LAYER].includes(status) && isWidgetLayerSupported(layer)) {
         return (
             <ItemComponent
                 {...props}

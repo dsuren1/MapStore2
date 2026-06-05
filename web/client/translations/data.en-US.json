@@ -668,7 +668,7 @@
       "grabGroupIcon": "Grab and sort group",
       "toggleLayerVisibilityWarning": "Toggle layer visibility. Warning: layer didn't load correctly",
       "createWidget": "Create a widget for the selected layer",
-      "createFilterWidget": "Create a filter widget for the map",
+      "createWidgetForMap": "Create a widget for the map",
       "editLayerProperties": "Edit layer properties",
       "browseData": "Open Attribute Table",
       "removeLayer": "Remove layer",

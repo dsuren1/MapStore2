@@ -31,13 +31,13 @@ const LayerSelectorField = ({
     onFilterLayer = () => {},
     onOpenLayerSelector,
     dashBoardEditing = false,
-    isMapFilterWidget = false,
+    mapLayersOnly = false,
     hideFilter = false
 }) => {
     const layerTitle = getLayerTitle(layer);
-    // map filter widgets (TOC entry) allow re-selecting the source layer just
-    // like the dashboard editing flow does.
-    const allowLayerChange = dashBoardEditing || isMapFilterWidget;
+    // allow re-selecting the source layer when editing a dashboard widget or a
+    // map-layers-only widget (mapLayersOnly is persisted, so it works on edit too).
+    const allowLayerChange = dashBoardEditing || mapLayersOnly;
     const isDisabled = !allowLayerChange && layer;
     const validationState = layerIsRequired && !layer ? 'error' : null;
 
@@ -94,7 +94,7 @@ LayerSelectorField.propTypes = {
     showEditFilter: PropTypes.bool,
     filter: PropTypes.object,
     dashBoardEditing: PropTypes.bool,
-    isMapFilterWidget: PropTypes.bool,
+    mapLayersOnly: PropTypes.bool,
     hideFilter: PropTypes.bool
 };
 

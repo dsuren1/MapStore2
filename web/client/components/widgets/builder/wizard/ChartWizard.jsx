@@ -122,6 +122,9 @@ const ChartWizard = ({
     valid,
     dashBoardEditing
 }) => {
+    // map widgets created from the TOC flow (mapLayersOnly) allow re-selecting
+    // the source layer just like the dashboard editing flow does.
+    const allowLayerChange = dashBoardEditing || data?.mapLayersOnly === true;
     const selectedChart = (data?.charts || []).find((chart) => chart.chartId === data.selectedChartId);
     const traces = selectedChart?.traces || [];
     const selectedTrace = traces.find(trace => trace.id === data?.selectedTraceId) || traces[0];
@@ -202,10 +205,10 @@ const ChartWizard = ({
                         onChange(`charts[${selectedChart?.chartId}].traces[${selectedTrace.id}].${key}`, value);
                     }}
                     layer={selectedTrace?.layer}
-                    disableLayerSelection={!dashBoardEditing}
+                    disableLayerSelection={!allowLayerChange}
                     showTitle={false}
                     error={!!errors?.[selectedTrace?.layer?.name]}
-                    onChangeLayer={dashBoardEditing ? () => toggleLayerSelector({
+                    onChangeLayer={allowLayerChange ? () => toggleLayerSelector({
                         key: 'chart-layer-replace',
                         chartId: selectedChart?.chartId,
                         traceId: selectedTrace?.id

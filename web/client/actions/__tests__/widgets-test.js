@@ -108,7 +108,6 @@ describe('Test correctness of the widgets actions', () => {
     it('insertWidget preserves the persisted widget payload (no transient flag stripping)', () => {
         const widget = {
             widgetType: 'filter',
-            isMapFilterWidget: true,
             title: 'My Filter'
         };
         const retval = insertWidget(widget);
@@ -117,39 +116,14 @@ describe('Test correctness of the widgets actions', () => {
         expect(retval.widget.title).toBe('My Filter');
         expect(retval.widget.widgetType).toBe('filter');
     });
-    it('insertWidget marks a map filter widget as a map filter widget (isMapFilterWidget=true)', () => {
+    it('insertWidget persists the mapLayersOnly flag so it survives edit mode', () => {
         const widget = {
             widgetType: 'filter',
-            isMapFilterWidget: true,
+            mapLayersOnly: true,
             title: 'TOC Filter'
         };
         const retval = insertWidget(widget);
-        expect(retval.widget.isMapFilterWidget).toBe(true);
-    });
-    it('insertWidget marks a builder-created filter widget as non-map (isMapFilterWidget=false)', () => {
-        const widget = {
-            widgetType: 'filter',
-            title: 'Generic Filter'
-        };
-        const retval = insertWidget(widget);
-        expect(retval.widget.isMapFilterWidget).toBe(false);
-    });
-    it('insertWidget respects an explicit isMapFilterWidget=true on the payload', () => {
-        const widget = {
-            widgetType: 'filter',
-            isMapFilterWidget: true,
-            title: 'Explicit Map Filter'
-        };
-        const retval = insertWidget(widget);
-        expect(retval.widget.isMapFilterWidget).toBe(true);
-    });
-    it('insertWidget does not set isMapFilterWidget on non-filter widgets', () => {
-        const widget = {
-            widgetType: 'chart',
-            title: 'Chart Widget'
-        };
-        const retval = insertWidget(widget);
-        expect(retval.widget.isMapFilterWidget).toBe(undefined);
+        expect(retval.widget.mapLayersOnly).toBe(true);
     });
     it('updateWidget', () => {
         const widget = {};

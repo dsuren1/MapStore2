@@ -126,7 +126,7 @@ describe('FilterWidgetTOCButton plugin', () => {
         expect(btns[0].getAttribute('data-tooltip')).toBe('toc.createFilterWidget');
     });
 
-    it('clicking the button dispatches createWidget with widgetType=filter and isMapFilterWidget=true', () => {
+    it('clicking the button dispatches createWidget without a preset widgetType (opens the type selector) and flags map-layers-only', () => {
         const { store, dispatched } = makeStore();
         ReactDOM.render(
             <Provider store={store}>
@@ -142,8 +142,10 @@ describe('FilterWidgetTOCButton plugin', () => {
         Simulate.click(btn);
         expect(dispatched.length).toBe(1);
         expect(dispatched[0].type).toBe(NEW);
-        expect(dispatched[0].widget.widgetType).toBe('filter');
-        expect(dispatched[0].widget.isMapFilterWidget).toBe(true);
+        // no preset type: the "Select the widget type" panel is shown first
+        expect(dispatched[0].widget.widgetType).toBe(undefined);
+        // every builder's layer step lists only the current map layers
+        expect(dispatched[0].widget.mapLayersOnly).toBe(true);
         expect(dispatched[0].widget.builderEntry).toBe(undefined);
     });
 
