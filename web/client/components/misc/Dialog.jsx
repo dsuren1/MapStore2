@@ -48,6 +48,11 @@ class Dialog extends React.Component {
         bounds: 'parent'
     };
 
+    constructor(props) {
+        super(props);
+        this.mouseDownInside = false;
+    }
+
     renderLoading = () => {
         if (this.props.maskLoading) {
             return (<div style={{
@@ -75,7 +80,7 @@ class Dialog extends React.Component {
     };
 
     render() {
-        const body = (<div id={this.props.id} style={{ ...this.props.style}} className={`${this.props.draggable ? 'modal-dialog-draggable' : ''} ${this.props.className} modal-dialog-container`}>
+        const body = (<div id={this.props.id} style={{ ...this.props.style}} onMouseDown={this.onMouseDown} className={`${this.props.draggable ? 'modal-dialog-draggable' : ''} ${this.props.className} modal-dialog-container`}>
             <div className={this.props.headerClassName + " draggable-header"}>
                 {this.renderRole('header')}
             </div>
@@ -92,7 +97,7 @@ class Dialog extends React.Component {
         </Draggable>) : body;
         let containerStyle = Object.assign({}, this.props.style.display ? {display: this.props.style.display} : {}, this.props.backgroundStyle);
         return this.props.modal ?
-            <div ref={(mask) => { this.mask = mask; }} onClick={this.onClickOut} style={containerStyle} className={"fade in modal " + this.props.containerClassName} role="dialog">
+            <div ref={(mask) => { this.mask = mask; }} onMouseDown={this.onMouseDown} onClick={this.onClickOut}  style={containerStyle} className={"fade in modal " + this.props.containerClassName} role="dialog">
                 {dialog}
             </div> :
             dialog;
@@ -101,8 +106,12 @@ class Dialog extends React.Component {
     hasRole = (role) => {
         return React.Children.toArray(this.props.children).filter((child) => child.props.role === role).length > 0;
     };
+    onMouseDown = (e) => {
+        this.mouseDownInside = this.mask && this.mask.contains(e.target) && this.mask !== e.target;
+        console.log('onMouseDown', this.mouseDownInside);
+    };
     onClickOut = (e) => {
-        if (this.props.onClickOut && this.mask === e.target) {
+        if (this.props.onClickOut && this.mask === e.target && !this.mouseDownInside) {
             this.props.onClickOut(e);
         }
     };

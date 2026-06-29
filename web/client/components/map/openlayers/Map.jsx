@@ -19,6 +19,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import {reproject, reprojectBbox, normalizeLng, normalizeSRS } from '../../../utils/CoordinatesUtils';
+import { resolveZoomToExtentPadding } from '../../../utils/WidgetMapPaddingUtils';
 import { getProjection as msGetProjection }  from '../../../utils/ProjectionUtils';
 import ConfigUtils from '../../../utils/ConfigUtils';
 import mapUtils, { isNearlyEqual, getResolutionsForProjection } from '../../../utils/MapUtils';
@@ -677,13 +678,16 @@ class OpenlayersMap extends React.Component {
         const isDegenerate = bounds[0] === bounds[2] && bounds[1] === bounds[3];
         // TODO: allow maxZoom to be customizable
         const maxZoom = isDegenerate && isNil(zoomLevel) ? 21 : zoomLevel;
+        const mapEl = this.map.getTargetElement();
+        const effectivePadding = resolveZoomToExtentPadding(mapEl, padding);
+        const paddingValues = [effectivePadding.top || 0, effectivePadding.right || 0, effectivePadding.bottom || 0, effectivePadding.left || 0];
         this.map.getView().fit(bounds, {
             size: this.map.getSize(),
             // mapPaddingSelector returns null while the layout epic is mid-computation
             // (e.g. during a setView swap on projection change). Pass undefined in that
             // case so OL applies its own [0,0,0,0] default - passing null reaches
             // View.fitInternal where padding[1] dereferences and throws.
-            ...(padding ? { padding: [padding.top || 0, padding.right || 0, padding.bottom || 0, padding.left || 0] } : {}),
+            ...(padding ? { padding: paddingValues } : {}),
             maxZoom,
             duration,
             nearest

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
 */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import Proj4js from 'proj4';
 import uniq from 'lodash/uniq';
@@ -14,6 +14,8 @@ import isPlainObject from 'lodash/isPlainObject';
 import { zoomToExtent } from '../../../actions/map';
 import Message from '../../../components/I18N/Message';
 import turfBbox from '@turf/bbox';
+import { isFilterValid } from '../../../utils/FilterUtils';
+import { getLayerJSONFeature } from '../../../observables/wfs';
 
 const getCRS = (layers = []) => {
     const crsValues = uniq(layers.map((layer) => layer?.bbox?.crs).filter(value => !!value));
@@ -102,37 +104,95 @@ const ZoomToLayersButton = connect(() => ({}), {
 }) => {
 
     const ItemComponent = itemComponent;
-    if ([statusTypes.LAYER, statusTypes.GROUP, statusTypes.LAYERS, statusTypes.GROUPS, statusTypes.BOTH].includes(status)) {
-        const layers = getGroupLayers({ nodes: selectedNodes.map(selected => selected?.node) });
-        const layersWithBbox = addVectorBbox(layers).filter(layer => isPlainObject(layer?.bbox?.bounds) && layer?.bbox?.crs);
-        const crs = getCRS(layersWithBbox);
-        if (!crs) {
-            return null;
-        }
-        const crsIsSupported = crs && Proj4js.defs(crs);
-        const boundingBox = computeBoundingBoxFromLayers(layersWithBbox);
-        if (!boundingBox) {
-            return null;
-        }
-        return (
-            <ItemComponent
-                {...props}
-                glyph="zoom-to"
-                style={crsIsSupported
-                    ? { opacity: 1.0, cursor: 'pointer' }
-                    : { opacity: 0.5, cursor: 'default' }}
-                labelId={layersWithBbox.length > 1 ? 'toc.toolZoomToLayersTooltip' : 'toc.toolZoomToLayerTooltip'}
-                tooltip={
-                    crsIsSupported
-                        ? <Message msgId={layersWithBbox.length > 1 ? 'toc.toolZoomToLayersTooltip' : 'toc.toolZoomToLayerTooltip'}/>
-                        : <Message msgId="toc.epsgNotSupported" msgParams={{ epsg: crs || ' ' }}/>
+    const isValidStatus = [statusTypes.LAYER, statusTypes.GROUP, statusTypes.LAYERS, statusTypes.GROUPS, statusTypes.BOTH].includes(status);
+    const layers = isValidStatus ? getGroupLayers({ nodes: selectedNodes.map(selected => selected?.node) }) : [];
+    const layersWithBbox = isValidStatus ? addVectorBbox(layers).filter(layer => isPlainObject(layer?.bbox?.bounds) && layer?.bbox?.crs) : [];
+    const crs = getCRS(layersWithBbox);
+
+    const singleLayer = layersWithBbox.length === 1 ? layersWithBbox[0] : null;
+    const layerFilter = singleLayer?.layerFilter ?? {};
+    const hasValidFilter = !!(layerFilter && !layerFilter.disabled && isFilterValid(layerFilter));
+
+    const [filteredBBox, setFilteredBBox] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const layerFilterString = JSON.stringify(layerFilter);
+
+    useEffect(() => {
+        if (hasValidFilter && singleLayer) {
+            setLoading(true);
+            getLayerJSONFeature(
+                singleLayer,
+                {
+                    ...layerFilter,
+                    featureTypeName: singleLayer.name,
+                    filterType: 'OGC',
+                    ogcVersion: '1.1.0'
                 }
-                onClick={!crsIsSupported ? () => {} : () => onZoomTo(boundingBox.bounds, boundingBox.crs)}
-            />
-        );
+            )
+                .toPromise()
+                .then((response) => {
+                    const features = response?.features;
+                    const bbox = response?.bbox;
+                    if (bbox || features?.length) {
+                        const extent = bbox || turfBbox({
+                            type: 'FeatureCollection',
+                            features
+                        });
+                        setFilteredBBox({
+                            bounds: {
+                                minx: extent[0],
+                                miny: extent[1],
+                                maxx: extent[2],
+                                maxy: extent[3]
+                            },
+                            crs: 'EPSG:4326'
+                        });
+                    } else {
+                        setFilteredBBox(null);
+                    }
+                    setLoading(false);
+                }).catch(() => {
+                    setFilteredBBox(null);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else {
+            setFilteredBBox(null);
+            setLoading(false);
+        }
+    }, [hasValidFilter, singleLayer?.id, singleLayer?.name, layerFilterString]);
+
+    if (!isValidStatus || !crs) {
+        return null;
     }
-    return null;
+
+    const crsIsSupported = crs && Proj4js.defs(crs);
+
+    const boundingBox = hasValidFilter
+        ? filteredBBox
+        : computeBoundingBoxFromLayers(layersWithBbox);
+
+    if (!boundingBox && !loading) {
+        return null;
+    }
+    return (
+        <ItemComponent
+            {...props}
+            glyph={"zoom-to"}
+            style={crsIsSupported
+                ? { opacity: 1.0, cursor: 'pointer' }
+                : { opacity: 0.5, cursor: 'default' }}
+            disabled={loading || !crsIsSupported}
+            labelId={layersWithBbox.length > 1 ? 'toc.toolZoomToLayersTooltip' : 'toc.toolZoomToLayerTooltip'}
+            tooltip={
+                crsIsSupported
+                    ? <Message msgId={layersWithBbox.length > 1 ? 'toc.toolZoomToLayersTooltip' : 'toc.toolZoomToLayerTooltip'}/>
+                    : <Message msgId="toc.epsgNotSupported" msgParams={{ epsg: crs || ' ' }}/>
+            }
+            onClick={!crsIsSupported ? () => {} : () => onZoomTo(boundingBox.bounds, boundingBox.crs)}
+        />
+    );
 });
 
 export default ZoomToLayersButton;
-
