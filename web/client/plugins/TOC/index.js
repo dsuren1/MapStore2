@@ -23,6 +23,7 @@ import { userSelector } from '../../selectors/security';
 import { currentLocaleSelector, currentLocaleLanguageSelector } from '../../selectors/locale';
 import { mapSelector, mapNameSelector } from '../../selectors/map';
 import { isLocalizedLayerStylesEnabledSelector } from '../../selectors/localizedLayerStyles';
+import { getFloatingWidgets } from '../../selectors/widgets';
 import { createPlugin } from '../../utils/PluginsUtils';
 import { createShallowSelectorCreator } from '../../utils/ReselectUtils';
 import { NodeTypes, ROOT_GROUP_ID, DEFAULT_GROUP_ID } from '../../utils/LayersUtils';
@@ -357,6 +358,7 @@ function TOC({
     projection,
     mapSize,
     mapBbox,
+    filterWidgets,
     currentLocale,
     language,
     scales,
@@ -503,6 +505,7 @@ function TOC({
                     layerOptions: {
                         ...layerOptions,
                         hideLegend: !activateLegendTool,
+                        filterWidgets,
                         legendOptions: {
                             ...layerOptions?.legendOptions,
                             projection,
@@ -596,7 +599,8 @@ const tocSelector = createShallowSelectorCreator(isEqual)(
     getResolutionsProps,
     visualizationModeSelector,
     getTOCConfig,
-    (enabled, tree, layers, selectedNodes, user, map, title, currentLocale, currentLocaleLanguage, isLocalizedLayerStylesEnabled, { resolutions, resolution }, visualizationMode, config) => ({
+    getFloatingWidgets,
+    (enabled, tree, layers, selectedNodes, user, map, title, currentLocale, currentLocaleLanguage, isLocalizedLayerStylesEnabled, { resolutions, resolution }, visualizationMode, config, widgets) => ({
         enabled,
         tree,
         selectedNodes: selectedNodesIdsToObject(selectedNodes, layers, tree),
@@ -621,7 +625,10 @@ const tocSelector = createShallowSelectorCreator(isEqual)(
         init: config.init,
         showFullTitle: config.showFullTitle,
         showOpacityTooltip: config.showOpacityTooltip,
-        activateFilterLayer: config.activateFilterLayer
+        activateFilterLayer: config.activateFilterLayer,
+        filterWidgets: (widgets || [])
+            .filter((widget) => widget?.widgetType === 'filter')
+            .map((widget) => ({ id: widget.id, title: widget.title }))
     })
 );
 

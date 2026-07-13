@@ -1183,6 +1183,31 @@ export const isFilterEmpty = ({ filterFields = [], spatialField = {}, crossLayer
     && !spatialField.geometry
     && !(crossLayerFilter && crossLayerFilter.attribute && crossLayerFilter.operation)
     && !(filters && filters.length > 0);
+/**
+ * Checks if a layerFilter contains a filter set globally (e.g. from the query panel or the interactive legend),
+ * as opposed to a filter applied only through one or more filter widgets.
+ * @param {object} layerFilter the layer filter object
+ * @return {boolean} true if the layerFilter has a global filter set
+ */
+export const isFilterGlobal = ({ filterFields = [], spatialField = {}, crossLayerFilter = {}, filters = [] } = {}) =>
+    (filterFields.filter((field) => field.value || field.value === 0 || field.operator === "isNull").length > 0)
+    || !!spatialField.geometry
+    || !!(crossLayerFilter && crossLayerFilter.attribute && crossLayerFilter.operation)
+    || filters.some((f) => !f.appliedFromWidget);
+/**
+ * Returns the unique ids of the filter widgets that applied a filter to the layerFilter
+ * @param {object} layerFilter the layer filter object
+ * @return {string[]} array of unique widget ids
+ */
+export const getFilterWidgetIds = ({ filters = [] } = {}) =>
+    [...new Set(filters.filter((f) => f.appliedFromWidget).map((f) => f.appliedFromWidget))];
+/**
+ * Checks if a layerFilter contains a filter applied only by one or more filter widgets, with no global filter set
+ * @param {object} layerFilter the layer filter object
+ * @return {boolean} true if the layerFilter is applied only from filter widgets
+ */
+export const isFilterFromWidgetOnly = (layerFilter) =>
+    !isFilterGlobal(layerFilter) && getFilterWidgetIds(layerFilter).length > 0;
 export const isFilterValid = (f = {}) =>
     (f.filterFields && f.filterFields.length > 0)
     || (f.simpleFilterFields && f.simpleFilterFields.length > 0)

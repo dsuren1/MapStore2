@@ -5,11 +5,12 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback, act } from 'react';
 import PropTypes from 'prop-types';
 import { compose } from 'recompose';
 import { connect } from 'react-redux';
 import moment from 'moment';
+import get from 'lodash/get';
 import { Button, Glyphicon, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { applyFilterWidgetInteractions } from '../../actions/interactions';
 import filterWidgetEnhancer from '../../components/widgets/enhancers/filterWidget';
@@ -29,6 +30,7 @@ import { isFilterSelectionValid } from './utils/filterBuilder';
 import InfoPopover from '../../components/widgets/widget/InfoPopover';
 import { cleanPaths } from '../../utils/WidgetsUtils';
 import { isMapTimeTarget } from '../../utils/InteractionUtils';
+import Text from '../../components/layout/Text';
 
 const toIsoTime = (value) => {
     if (value === undefined || value === null || value === '') {
@@ -309,6 +311,19 @@ const FilterView = ({
         onSelectionChange(selectedValues);
     }, [disableMapTimeSelection, layout.forceSelection, onSelectionChange]);
 
+    let activeLayers = useMemo(() => {
+        const interactionTargetPaths = interactions
+            .filter(({plugged, id}) => plugged && !inactiveInteractionIds.includes(id)) // get only plugged active interactions
+            .map(interaction => ({path: cleanPaths(interaction.target.nodePath), layer: get(interaction, "target.metaData.constraints.layer")})); // get target paths;
+        return interactionTargetPaths
+            .filter(target =>
+                Object.entries(activeTargets).some(([activePath, visibility]) => {
+                    return (visibility && target.path === cleanPaths(activePath)) || isMapTimeTarget(target.path);
+                })
+            ).map(target => get(target, "layer.title"));
+    }, [activeTargets, inactiveInteractionIds, interactions]);
+    activeLayers = [...new Set(activeLayers)];
+
     if (!filterData) {
         return null;
     }
@@ -548,6 +563,7 @@ const FilterView = ({
                     {perItemToolbar}
                 </div>
             </div>
+            {activeLayers.length > 0 && <Text fontSize="sm" key={filterData.id + '-title'}>{activeLayers.join(', ')}</Text>}
             {disableMapTimeSelection ? (
                 <MapTimeRangeDisabledInfo />
             ) : showUnsupportedVariantWarning ? (

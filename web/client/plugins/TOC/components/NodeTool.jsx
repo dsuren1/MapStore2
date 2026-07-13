@@ -17,6 +17,7 @@ const GlyphIndicator = tooltip(Glyphicon);
  * @prop {string} glyph icon name
  * @prop {string} tooltipId message id for tooltip
  * @prop {string} tooltip message for tooltip
+ * @prop {object} tooltipParams parameters for the tooltip message id
  * @prop {boolean} active show active style if true
  * @prop {object} style add custom style
  * @prop {string} className add custom class name
@@ -35,6 +36,7 @@ function NodeTool({
         glyph,
         tooltipId,
         tooltip: tooltipProp,
+        tooltipParams,
         active,
         style,
         className,
@@ -47,6 +49,7 @@ function NodeTool({
             disabled={disabled}
             tooltipId={tooltipId}
             tooltip={tooltipProp}
+            tooltipParams={tooltipParams}
             onClick={(event) => {
                 event.stopPropagation();
                 event.preventDefault();

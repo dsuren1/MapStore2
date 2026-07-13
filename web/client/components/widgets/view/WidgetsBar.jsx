@@ -6,6 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { compose, withPropsOnChange } from 'recompose';
+import pickBy from 'lodash/pickBy';
+import pick from 'lodash/pick';
+import isEmpty from 'lodash/isEmpty';
+
 
 import Toolbar from '../../misc/toolbar/Toolbar';
 
@@ -35,7 +39,7 @@ const getWidgetIcon = ({widgetType, charts = []} = {}) => {
     case "legend":
         return "list";
     case "filter":
-        return "filter";
+        return "filter-widget";
     default:
         if (widgetType === "chart") {
             return "chart";
@@ -58,12 +62,16 @@ export default compose(
     withPropsOnChange(
         ["widgets", "onClick"],
         ({ widgets = [], onClick = () => {}}) => ({
-            buttons: widgets.map(w => ({
-                glyph: getWidgetIcon(w),
-                tooltip: w.title,
-                className: `square-button ${w.collapsed ? "btn-tray" : "btn-tray active"}`,
-                onClick: () => onClick(w)
-            }))
+            buttons: widgets.map(w => {
+                const activeFilters = w.filters?.filter(f => !f.disabled)?.map(f => f.id);
+                const isFilterApplied = activeFilters?.some(key => (w.selections || {})[key]?.length > 0);
+                return {
+                    glyph: getWidgetIcon(w),
+                    tooltip: w.title,
+                    className: `square-button ${w.collapsed ? "btn-tray" : `btn-tray active ${isFilterApplied ? 'ms-notification-circle success' : ''}`}`,
+                    onClick: () => onClick(w)
+                };
+            })
         })
     )
 )(Toolbar);

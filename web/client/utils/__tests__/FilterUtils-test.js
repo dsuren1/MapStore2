@@ -31,6 +31,9 @@ import {
     convertFiltersToOGC,
     convertFiltersToCQL,
     isFilterEmpty,
+    isFilterGlobal,
+    getFilterWidgetIds,
+    isFilterFromWidgetOnly,
     updateLayerLegendFilter,
     resetLayerLegendFilter,
     updateLayerWFSVectorLegendFilter,
@@ -2470,6 +2473,79 @@ describe('FilterUtils', () => {
             filters: []
         })).toBe(false);
 
+    });
+    it('isFilterGlobal', () => {
+        // no filter at all
+        expect(isFilterGlobal({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: []
+        })).toBe(false);
+        // global filter fields
+        expect(isFilterGlobal({
+            filterFields: [{value: 1}],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: []
+        })).toBe(true);
+        // global spatial filter
+        expect(isFilterGlobal({
+            filterFields: [],
+            spatialField: {geometry: {type: 'Point', coordinates: [1, 2]}},
+            crossLayerFilter: {},
+            filters: []
+        })).toBe(true);
+        // global cross layer filter
+        expect(isFilterGlobal({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {attribute: 'attr', operation: 'op'},
+            filters: []
+        })).toBe(true);
+        // only a filter applied from a widget, no global filter
+        expect(isFilterGlobal({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: [{id: 'f1', appliedFromWidget: 'widget1'}]
+        })).toBe(false);
+        // a non widget filter in the filters array (e.g. interactive legend) counts as global
+        expect(isFilterGlobal({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: [{id: 'interactiveLegend'}]
+        })).toBe(true);
+    });
+    it('getFilterWidgetIds', () => {
+        expect(getFilterWidgetIds({filters: []})).toEqual([]);
+        expect(getFilterWidgetIds({filters: [
+            {id: 'f1', appliedFromWidget: 'widget1'},
+            {id: 'f2', appliedFromWidget: 'widget2'},
+            {id: 'f3', appliedFromWidget: 'widget1'},
+            {id: 'f4'}
+        ]})).toEqual(['widget1', 'widget2']);
+    });
+    it('isFilterFromWidgetOnly', () => {
+        expect(isFilterFromWidgetOnly({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: [{id: 'f1', appliedFromWidget: 'widget1'}]
+        })).toBe(true);
+        expect(isFilterFromWidgetOnly({
+            filterFields: [{value: 1}],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: [{id: 'f1', appliedFromWidget: 'widget1'}]
+        })).toBe(false);
+        expect(isFilterFromWidgetOnly({
+            filterFields: [],
+            spatialField: {},
+            crossLayerFilter: {},
+            filters: []
+        })).toBe(false);
     });
     // for wms
     it('test updateLayerLegendFilter for wms, simple filter', () => {

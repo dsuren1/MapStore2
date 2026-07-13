@@ -102,9 +102,10 @@ export const WIDGET_TARGETS_BY_TYPE = {
  * @param {string|""} id - The layer id
  * @returns {object} Layer constraint object with name (defaults to "") and id (defaults to undefined)
  */
-export function createLayerConstraint(name) {
+export function createLayerConstraint(layer) {
     return {
-        name: name
+        name: layer.name,
+        title: layer.title || layer.name
     };
 }
 
@@ -340,7 +341,7 @@ export function generateLayerMetadataTree(layer) {
                 return {
                     ...t,
                     constraints: {
-                        layer: createLayerConstraint(layer.name)
+                        layer: createLayerConstraint(layer)
                     }
                 };
             })
@@ -517,7 +518,7 @@ export function generateChartTraceElementNode(trace) {
             targets: WIDGET_TARGETS_BY_TYPE.chartTrace.map(t => ({
                 ...t,
                 constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(trace?.layer?.name)
+                    layer: createLayerConstraint(trace?.layer)
                 }
             }))
         }
@@ -598,7 +599,7 @@ export function generateTableWidgetTreeNode(widget) {
             targets: WIDGET_TARGETS_BY_TYPE.table.map(t => ({
                 ...t,
                 constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(widget?.layer?.name)
+                    layer: createLayerConstraint(widget?.layer)
                 }
             }))
         }
@@ -619,7 +620,7 @@ export function generateCounterWidgetTreeNode(widget) {
             targets: WIDGET_TARGETS_BY_TYPE.counter.map(t => ({
                 ...t,
                 constraints: t.constraints?.layer ? t.constraints : {
-                    layer: createLayerConstraint(widget?.layer?.name)
+                    layer: createLayerConstraint(widget?.layer)
                 }
             }))
         }
@@ -886,7 +887,7 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
             glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_FILTER],
             expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_FILTER],
             constraints: layerInvolved ? {
-                layer: createLayerConstraint(layerInvolved.name)
+                layer: createLayerConstraint(layerInvolved)
             } : {}
         },
         {
@@ -895,7 +896,7 @@ export function getPossibleTargetsEditingWidget(widgetType, layerInvolved) {
             glyph: TARGET_TYPE_GLYPHS[TARGET_TYPES.APPLY_STYLE],
             expectedDataType: TARGET_EVENT_DATA_TYPES[TARGET_TYPES.APPLY_STYLE],
             constraints: layerInvolved ? {
-                layer: createLayerConstraint(layerInvolved.name)
+                layer: createLayerConstraint(layerInvolved)
             } : {}
         },
         {

@@ -13,7 +13,14 @@ import expect from 'expect';
 import * as TestUtils from 'react-dom/test-utils';
 import { layerFilter, emptyLayerFilter }  from '../../../../test-resources/widgets/dependenciesToFiltersData';
 
-const TestItemComponent = ({ glyph, onClick }) => <button className={glyph} onClick={() => onClick()}></button>;
+const TestItemComponent = ({ glyph, onClick, tooltipId, tooltipParams }) => (
+    <button
+        className={glyph}
+        data-tooltip-id={tooltipId}
+        data-tooltip-widgets={tooltipParams?.widgets}
+        onClick={() => onClick()}
+    ></button>
+);
 
 describe('FilterNodeTool', () => {
     beforeEach((done) => {
@@ -31,6 +38,7 @@ describe('FilterNodeTool', () => {
         ReactDOM.render(<FilterNodeTool node={layerFilter} itemComponent={TestItemComponent} />, document.getElementById("container"));
         const fNode = document.querySelector('.filter');
         expect(fNode).toBeTruthy();
+        expect(fNode.getAttribute('data-tooltip-id')).toBe('toc.filterIconEnabled');
     });
 
     it('test cannot render component', () => {
@@ -53,4 +61,63 @@ describe('FilterNodeTool', () => {
         expect(propertiesChangeHandlerSpy).toHaveBeenCalled();
     });
 
+    it('render widget-only filter with filter-widget glyph and tooltip naming the widget', () => {
+        const node = {
+            layerFilter: {
+                filterFields: [],
+                spatialField: {},
+                crossLayerFilter: {},
+                disabled: false,
+                filters: [{ id: 'f1', appliedFromWidget: 'widget1' }]
+            }
+        };
+        const config = { layerOptions: { filterWidgets: [{ id: 'widget1', title: 'My Filter Widget' }] } };
+        ReactDOM.render(<FilterNodeTool node={node} config={config} itemComponent={TestItemComponent} />, document.getElementById("container"));
+        expect(document.querySelector('.filter')).toBeFalsy();
+        const fNode = document.querySelector('.filter-widget');
+        expect(fNode).toBeTruthy();
+        expect(fNode.getAttribute('data-tooltip-id')).toBe('toc.filterWidgetIconEnabled');
+        expect(fNode.getAttribute('data-tooltip-widgets')).toBe('My Filter Widget');
+    });
+
+    it('render multiple widgets filtering the same layer', () => {
+        const node = {
+            layerFilter: {
+                filterFields: [],
+                spatialField: {},
+                crossLayerFilter: {},
+                disabled: false,
+                filters: [
+                    { id: 'f1', appliedFromWidget: 'widget1' },
+                    { id: 'f2', appliedFromWidget: 'widget2' }
+                ]
+            }
+        };
+        const config = { layerOptions: { filterWidgets: [
+            { id: 'widget1', title: 'Widget One' },
+            { id: 'widget2', title: 'Widget Two' }
+        ] } };
+        ReactDOM.render(<FilterNodeTool node={node} config={config} itemComponent={TestItemComponent} />, document.getElementById("container"));
+        const fNode = document.querySelector('.filter-widget');
+        expect(fNode).toBeTruthy();
+        expect(fNode.getAttribute('data-tooltip-widgets')).toBe('Widget One, Widget Two');
+    });
+
+    it('render global filter over the global glyph when both global and widget filters are present', () => {
+        const node = {
+            layerFilter: {
+                ...layerFilter.layerFilter,
+                filters: [{ id: 'f1', appliedFromWidget: 'widget1' }]
+            }
+        };
+        const config = { layerOptions: { filterWidgets: [{ id: 'widget1', title: 'My Filter Widget' }] } };
+        ReactDOM.render(<FilterNodeTool node={node} config={config} itemComponent={TestItemComponent} />, document.getElementById("container"));
+        expect(document.querySelector('.filter-widget')).toBeFalsy();
+        const fNode = document.querySelector('.filter');
+        expect(fNode).toBeTruthy();
+        expect(fNode.getAttribute('data-tooltip-id')).toBe('toc.filterAndWidgetIconEnabled');
+        expect(fNode.getAttribute('data-tooltip-widgets')).toBe('My Filter Widget');
+    });
+
 });
+
