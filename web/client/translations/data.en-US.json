@@ -2616,6 +2616,11 @@
 
         "applyFilter": "Apply Filter",
         "applyDimension": "Apply Dimension",
+        "zoomTo": "Zoom to",
+        "zoomToRequiresApplyFilterTooltip": "Connect an Apply Filter target to a layer in this map before enabling Zoom to",
+        "zoomToFilterExtent": "Zoom to filtered extent",
+        "autoZoomLabel": "Auto zoom",
+        "autoZoomInfo": "When enabled, the map zooms to the filtered extent automatically on every selection change. When disabled, a button lets the user trigger the zoom manually.",
         "noConnectableNodesAvailable": "No connectable nodes available",
 
         "selectAll": "Select All",

@@ -42,11 +42,23 @@ export const CONFIGURATION_METADATA = {
                 isEqual: true
             }
         }
+    },
+    autoZoom: {
+        label: "widgets.filterWidget.autoZoomLabel",
+        visibleWhen: {
+            targetType: {
+                isEqual: "zoomTo"
+            }
+        },
+        infoMsgByTargetType: {
+            "default": "widgets.filterWidget.autoZoomInfo"
+        }
     }
 };
 
 // Default configuration structure (simple boolean values)
 export const DEFAULT_CONFIGURATION = {
     forcePlug: false,
-    twoWaySynchronization: false
+    twoWaySynchronization: false,
+    autoZoom: false
 };

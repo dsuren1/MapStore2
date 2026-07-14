@@ -8,24 +8,30 @@
 
 import Rx from 'rxjs';
 import { get } from 'lodash';
+import bbox from '@turf/bbox';
 
 import {
     extractTraceFromWidgetByNodePath,
     extractLayerIdFromNodePath,
+    extractMapIdFromNodePath,
+    isAnyLayerPath,
     isChartAxisDimensionTarget,
     isLayerDimensionTarget,
     isMapLayerPath,
     isMapTimeTarget,
+    isMapZoomToTarget,
     TARGET_TYPES
 } from '../utils/InteractionUtils';
 import { updateWidgetProperty, INSERT, UPDATE, DELETE } from '../actions/widgets';
 import { getLayerFromId, layersSelector } from '../selectors/layers';
 import { changeLayerProperties, changeLayerParams, REMOVE_NODE } from '../actions/layers';
 import { setCurrentTime } from '../actions/dimension';
+import { zoomToExtent } from '../actions/map';
+import { getFeatureLayer } from '../api/WFS';
 import { defaultLayerFilter } from '../utils/FilterUtils';
 import { processFilterToCQL, buildExcludeCQLFilter, buildDefaultCQLFilter } from '../utils/FilterEventUtils';
 import { FILTER_SELECTION_MODES } from '../components/widgets/builder/wizard/filter/FilterDataTab/constants';
-import { APPLY_FILTER_WIDGET_INTERACTIONS, applyFilterWidgetInteractions } from '../actions/interactions';
+import { APPLY_FILTER_WIDGET_INTERACTIONS, applyFilterWidgetInteractions, ZOOM_TO_FILTER_EXTENT } from '../actions/interactions';
 import { getChartAxisDependencyPath, getMapDependencyPath } from '../utils/WidgetsUtils';
 import { shouldSkipInteraction } from '../selectors/widgets';
 
@@ -953,6 +959,110 @@ const applyInteractionEffectForApplyStyle = (interaction, state, targetContainer
     return Rx.Observable.empty();
 };
 
+/**
+ * Resolves the plugged applyFilter interaction (same source filter) that targets a layer
+ * inside the same map as the given zoomTo interaction. Phase 1 scope: single connected layer.
+ * @param {object} zoomInteraction - The plugged zoomTo interaction
+ * @param {array} siblingInteractions - All interactions from the same filter widget
+ * @returns {object|null} The matching applyFilter interaction, or null
+ */
+function findApplyFilterForZoomTo(zoomInteraction, siblingInteractions) {
+    const applyFilterConnections = siblingInteractions.filter(i =>
+        i.targetType === TARGET_TYPES.APPLY_FILTER
+        && i.plugged === true
+        && i?.source?.nodePath === zoomInteraction?.source?.nodePath
+        && isAnyLayerPath(i?.target?.nodePath)
+    );
+
+    const zoomNodePath = zoomInteraction?.target?.nodePath;
+    if (isMapZoomToTarget(zoomNodePath)) {
+        return applyFilterConnections.find(i => isMapLayerPath(i?.target?.nodePath)) || null;
+    }
+
+    const zoomMapId = extractMapIdFromNodePath(zoomNodePath);
+    return applyFilterConnections.find(i => {
+        const layerNodePath = i?.target?.nodePath;
+        return !isMapLayerPath(layerNodePath) && extractMapIdFromNodePath(layerNodePath) === zoomMapId;
+    }) || null;
+}
+
+/**
+ * Resolves the actual layer object (with its currently applied layerFilter) referenced by a
+ * plugged applyFilter interaction, either from the main map or from a dashboard map widget.
+ * @param {object} applyFilterInteraction - The plugged applyFilter interaction
+ * @param {object} state - Redux state
+ * @param {string} targetContainer - The widget container target
+ * @returns {object} `{layer, mapWidgetId, mapId}` (mapWidgetId/mapId set only for dashboard maps)
+ */
+function resolveZoomToLayer(applyFilterInteraction, state, targetContainer) {
+    const nodePath = applyFilterInteraction?.target?.nodePath;
+    const layerId = extractLayerIdFromNodePath(nodePath);
+    if (!layerId) {
+        return {};
+    }
+
+    if (isMapLayerPath(nodePath)) {
+        return { layer: getLayerFromId(state, layerId) };
+    }
+
+    const mapWidgetId = extractWidgetIdFromNodePath(nodePath);
+    const mapId = extractMapIdFromNodePath(nodePath);
+    const widgets = get(state, `widgets.containers[${targetContainer}].widgets`) || [];
+    const mapWidget = widgets.find(w => w.id === mapWidgetId);
+    const map = mapWidget?.maps?.find(m => m.mapId === mapId);
+    const layer = map?.layers?.find(l => l.id === layerId);
+    return { layer, mapWidgetId, mapId };
+}
+
+/**
+ * Builds the zoom-dispatch action for a resolved extent, targeting either the main map
+ * (via the global zoomToExtent action) or a dashboard map widget (via a `zoomToRequest`
+ * set on the widget's `maps[]` entry, consumed by the `interactionZoomToExtent` enhancer).
+ * @param {number[]} extent - `[minx, miny, maxx, maxy]` in EPSG:4326
+ * @param {object} resolvedLayer - `{mapWidgetId, mapId}` from `resolveZoomToLayer`
+ * @param {string} targetContainer - The widget container target
+ * @returns {object} Action to dispatch
+ */
+function buildZoomToExtentAction(extent, { mapWidgetId, mapId }, targetContainer) {
+    if (!mapWidgetId) {
+        return zoomToExtent(extent, "EPSG:4326");
+    }
+    return updateWidgetProperty(mapWidgetId, 'maps', {
+        mapId,
+        zoomToRequest: { extent, crs: "EPSG:4326" }
+    }, 'merge', targetContainer);
+}
+
+/**
+ * Applies the zoomTo interaction effect: resolves the connected layer's currently filtered
+ * extent (via WFS GetFeature honoring the layer's layerFilter, then turf bbox) and dispatches
+ * the appropriate zoom action for the target map (main map or dashboard map widget).
+ * @param {object} interaction - The plugged zoomTo interaction
+ * @param {object} filterWidget - The filter widget owning the interaction
+ * @param {object} state - Redux state
+ * @param {string} targetContainer - The widget container target
+ * @returns {Observable} Observable emitting zero or one action
+ */
+function applyInteractionEffectForZoomTo(interaction, filterWidget, state, targetContainer = 'floating') {
+    const siblingInteractions = filterWidget.interactions || [];
+    const applyFilterInteraction = findApplyFilterForZoomTo(interaction, siblingInteractions);
+    if (!applyFilterInteraction) {
+        return Rx.Observable.empty();
+    }
+
+    const resolvedLayer = resolveZoomToLayer(applyFilterInteraction, state, targetContainer);
+    if (!resolvedLayer.layer) {
+        return Rx.Observable.empty();
+    }
+
+    return Rx.Observable.fromPromise(getFeatureLayer(resolvedLayer.layer))
+        .map(response => {
+            const extent = bbox(response.data);
+            return buildZoomToExtentAction(extent, resolvedLayer, targetContainer);
+        })
+        .catch(() => Rx.Observable.empty());
+}
+
 // ============================================================================
 // Epics
 // ============================================================================
@@ -964,8 +1074,9 @@ const applyInteractionEffectForApplyStyle = (interaction, state, targetContainer
  */
 export const applyFilterWidgetInteractionsEpic = (action$, store) => {
     return action$
-        .ofType(APPLY_FILTER_WIDGET_INTERACTIONS)
-        .switchMap(({ widgetId, target, filterId }) => {
+        .ofType(APPLY_FILTER_WIDGET_INTERACTIONS, ZOOM_TO_FILTER_EXTENT)
+        .switchMap(({ type, widgetId, target, filterId }) => {
+            const isManualZoomTrigger = type === ZOOM_TO_FILTER_EXTENT;
             const state = store.getState();
             const widgets = get(state, `widgets.containers[${target}].widgets`) || [];
             const filterWidget = widgets.find(w => w.id === widgetId);
@@ -981,7 +1092,14 @@ export const applyFilterWidgetInteractionsEpic = (action$, store) => {
 
             // Get interactions from filter widget
             const interactions = filterWidget.interactions || [];
-            const pluggedInteractions = interactions.filter(interaction => interaction.plugged === true && interaction.source.nodePath.includes(filterId) && !!interaction.targetType);
+            const pluggedInteractions = interactions.filter(interaction =>
+                interaction.plugged === true
+                && interaction.source.nodePath.includes(filterId)
+                && !!interaction.targetType
+                // a manual zoom trigger only re-processes zoomTo interactions, it must not
+                // re-trigger filter/style/dimension application for the same filter
+                && (!isManualZoomTrigger || interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO)
+            );
 
             if (pluggedInteractions.length === 0) {
                 return Rx.Observable.empty();
@@ -1027,6 +1145,15 @@ export const applyFilterWidgetInteractionsEpic = (action$, store) => {
                         const action = applyInteractionEffectForApplyDimension(updatedInteraction, currentState, target);
                         return action
                             ? Rx.Observable.of(action)
+                            : Rx.Observable.empty();
+                    }
+
+                    if (interaction.targetType === TARGET_TYPES.APPLY_ZOOM_TO) {
+                        // on automatic selection-change triggers, only zoom if autoZoom is enabled;
+                        // a manual trigger (button click) always zooms regardless of the setting
+                        const shouldZoom = isManualZoomTrigger || interaction?.configuration?.autoZoom === true;
+                        return shouldZoom
+                            ? applyInteractionEffectForZoomTo(interaction, filterWidget, currentState, target)
                             : Rx.Observable.empty();
                     }
 

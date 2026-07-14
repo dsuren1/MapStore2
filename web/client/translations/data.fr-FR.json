@@ -2600,6 +2600,11 @@
         "onSelectionChange": "Lors du changement de sélection",
         "applyFilter": "Appliquer le filtre",
         "applyDimension": "Appliquer la dimension",
+        "zoomTo": "Zoomer sur",
+        "zoomToRequiresApplyFilterTooltip": "Connectez une cible Appliquer le filtre à une couche de cette carte avant d'activer Zoomer sur",
+        "zoomToFilterExtent": "Zoomer sur l'étendue filtrée",
+        "autoZoomLabel": "Zoom automatique",
+        "autoZoomInfo": "Si activé, la carte zoome automatiquement sur l'étendue filtrée à chaque changement de sélection. Si désactivé, un bouton permet à l'utilisateur de déclencher le zoom manuellement.",
         "noConnectableNodesAvailable": "Aucun nœud connectable disponible",
 
         "selectAll": "Tout sélectionner",
