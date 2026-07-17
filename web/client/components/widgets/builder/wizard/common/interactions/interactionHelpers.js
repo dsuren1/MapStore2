@@ -12,6 +12,10 @@ import {
     isLayerDimensionTarget,
     isLayerTimeDimensionTarget,
     isMapTimeTarget,
+    isMapZoomToTarget,
+    isMapLayerPath,
+    isAnyLayerPath,
+    extractMapIdFromNodePath,
     TARGET_TYPES
 } from '../../../../../../utils/InteractionUtils';
 
@@ -19,6 +23,30 @@ const DEFAULT_NODE_DISABLED = {
     disabled: false,
     reasonMsgId: null
 };
+
+/**
+ * Checks whether the filter (source) already has a plugged `applyFilter` connection
+ * to a layer inside the same map that the given zoomTo target node path refers to.
+ * A map is only a valid zoomTo target when it has a sibling filtered layer.
+ * @param {string} zoomTargetNodePath the zoomTo target node path (map.zoomTo or widgets[id].maps[mapId].zoomTo)
+ * @param {object[]} sourceConnections interactions sharing the same source (filter) node path
+ * @returns {boolean}
+ */
+function hasApplyFilterSibling(zoomTargetNodePath, sourceConnections) {
+    const applyFilterConnections = sourceConnections.filter(i =>
+        i.targetType === TARGET_TYPES.APPLY_FILTER && i.plugged && isAnyLayerPath(i?.target?.nodePath)
+    );
+
+    if (isMapZoomToTarget(zoomTargetNodePath)) {
+        return applyFilterConnections.some(i => isMapLayerPath(i?.target?.nodePath));
+    }
+
+    const zoomMapId = extractMapIdFromNodePath(zoomTargetNodePath);
+    return applyFilterConnections.some(i => {
+        const layerNodePath = i?.target?.nodePath;
+        return !isMapLayerPath(layerNodePath) && extractMapIdFromNodePath(layerNodePath) === zoomMapId;
+    });
+}
 
 /**
  * Helper: Build interaction object from item, event, and target metadata
@@ -155,6 +183,16 @@ export const getInteractionTargetNodeDisabled = ({
             return {
                 disabled: true,
                 reasonMsgId: 'widgets.filterWidget.applyDimensionMultipleSelectionDisabledTooltip'
+            };
+        }
+    }
+
+    if (target.targetType === TARGET_TYPES.APPLY_ZOOM_TO) {
+        const zoomSourceConnections = alreadyExistingInteractions.filter(i => i?.source?.nodePath === sourceNodePath);
+        if (!hasApplyFilterSibling(targetNodePath, zoomSourceConnections)) {
+            return {
+                disabled: true,
+                reasonMsgId: 'widgets.filterWidget.zoomToRequiresApplyFilterTooltip'
             };
         }
     }

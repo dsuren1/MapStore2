@@ -506,6 +506,29 @@ describe('FilterView component', () => {
         expect(container.querySelector('.ms-filter-collapse-toggle')).toExist();
     });
 
+    it('passes showZoomButton correctly to FilterItemToolbar based on interactions', () => {
+        const container = document.getElementById("container");
+        const filterData = createMockFilterData('checkbox', 'multiple');
+        const interactions = [{
+            plugged: true,
+            targetType: 'applyZoomTo',
+            configuration: { autoZoom: false }
+        }];
+
+        renderWithProvider(
+            <FilterView
+                filterData={filterData}
+                selectableItems={mockSelectableItems}
+                showItemToolbar
+                interactions={interactions}
+            />,
+            container
+        );
+        // The toolbar should now render the zoom button because the condition is met
+        const zoomBtn = container.querySelector('.ms-filter-card-toolbar .glyphicon-zoom-to');
+        expect(zoomBtn).toExist();
+    });
+
     it('renders the description info popover when layout.description is set', () => {
         const container = document.getElementById("container");
         const filterData = createMockFilterData('checkbox', 'multiple', { description: 'Some description' });

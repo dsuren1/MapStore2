@@ -9,7 +9,7 @@ import React from 'react';
 import FlexBox from '../../../../../layout/FlexBox';
 // import { filterTreeWithTarget } from '../../../../../../utils/InteractionUtils';
 import Message from '../../../../../I18N/Message';
-import { findNodeById, getItemPluggableStatus, isMapTimeTarget } from '../../../../../../utils/InteractionUtils';
+import { findNodeById, getItemPluggableStatus, isMapTimeTarget, isAnyZoomToTarget } from '../../../../../../utils/InteractionUtils';
 import InteractionsRow from './InteractionsRow';
 import { buildInteractionObject, findInteraction, getInteractionTargetNodeDisabled } from './interactionHelpers';
 import { DEFAULT_CONFIGURATION } from './interactionConstants';
@@ -19,6 +19,24 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
         const sourceNode = findNodeById(interactionTree, currentSourceId);
         return sourceNode?.nodePath || null;
     }, [interactionTree, currentSourceId]);
+
+    const hasMultipleZoomToNodes = React.useMemo(() => {
+        let count = 0;
+        const visit = (node) => {
+            if (count > 1) return;
+            if (isAnyZoomToTarget(node.nodePath)) {
+                count++;
+            }
+            node.children?.some(visit);
+        };
+        filteredInteractionTree && visit(filteredInteractionTree);
+        return count > 1;
+    }, [filteredInteractionTree]);
+
+    const globalAutoZoom = React.useMemo(() => {
+        const firstZoomToInteraction = (interactions || []).find(i => isAnyZoomToTarget(i.target?.nodePath) && i.source?.nodePath === sourceNodePath);
+        return firstZoomToInteraction?.configuration?.autoZoom || false;
+    }, [interactions, sourceNodePath]);
 
     const getNodeDisabled = React.useCallback(({ item, target: rowTarget, targetNodePath, sourceNodePath: rowSourceNodePath, plugged }) => {
         const nodeDisabled = getInteractionTargetNodeDisabled({
@@ -62,7 +80,10 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
         const interaction = buildInteractionObject({
             sourceNodePath,
             targetNodePath,
-            configuration: updates.configuration || DEFAULT_CONFIGURATION,
+            configuration: {
+                ...(updates.configuration || DEFAULT_CONFIGURATION),
+                ...(isAnyZoomToTarget(targetNodePath) ? { autoZoom: globalAutoZoom } : {})
+            },
             plugged: updates.plugged || false,
             targetMetaData,
             targetType: target.targetType
@@ -75,6 +96,7 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
         const targetMetaData = item?.interactionMetadata?.targets?.find(t => t.targetType === target.targetType);
         const existingInteraction = findInteraction(interactions, sourceNodePath, targetNodePath, target.targetType);
         const isMapTime = isMapTimeTarget(targetNodePath);
+        const isZoomTo = isAnyZoomToTarget(targetNodePath);
         const configuration = existingInteraction?.configuration || DEFAULT_CONFIGURATION;
         const plugged = existingInteraction?.plugged || false;
         const { directlyPluggable, configuredToForcePlug } = getItemPluggableStatus(item, target, configuration);
@@ -109,6 +131,35 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
             });
         };
 
+        const handleAutoZoomChange = (nextAutoZoom) => {
+            if (isZoomTo) {
+                const updatedInteractions = (interactions || []).map(i => {
+                    if (isAnyZoomToTarget(i.target?.nodePath) && i.source?.nodePath === sourceNodePath) {
+                        return {
+                            ...i,
+                            configuration: {
+                                ...(i.configuration || {}),
+                                autoZoom: nextAutoZoom
+                            }
+                        };
+                    }
+                    return i;
+                });
+                onEditorChange('interactions', updatedInteractions);
+            } else {
+                updateInteraction({
+                    configuration: { ...configuration, autoZoom: nextAutoZoom },
+                    plugged
+                });
+            }
+        };
+
+        const buttonsConfig = {
+            showAutoZoom: isZoomTo,
+            autoZoomForAllMaps: hasMultipleZoomToNodes,
+            onAutoZoomChange: handleAutoZoomChange
+        };
+
         return (
             <InteractionsRow
                 key={item.id || idx}
@@ -118,6 +169,7 @@ const InteractionTargetsList = ({target, interactionTree, interactions, sourceWi
                 isPluggable={directlyPluggable || configuredToForcePlug || configuration.forcePlug}
                 isConfigurable={!directlyPluggable || isMapTime}
                 configuration={configuration}
+                buttonsConfig={buttonsConfig}
                 configurationContext={{
                     hasOtherThanMapTimeConnected: hasOtherThanMapTimeConnected
                 }}
