@@ -245,7 +245,7 @@ const FilterView = ({
     const filterDisabled = !!filterData?.disabled;
 
     const [isCollapsed, setIsCollapsed] = useState(
-        () => (filterData?.layout?.defaultExpanded === false)
+        () => (showItemToolbar && filterData?.layout?.defaultExpanded === false)
     );
     const handleToggleCollapse = useCallback(() => setIsCollapsed(prev => !prev), []);
 
@@ -414,17 +414,6 @@ const FilterView = ({
     const showNoTargetsInfoTool = showNoTargetsInfo ?? layout.showNoTargetsInfo ?? true;
     // No title means no row for the arrow, so force the filter open.
     const effectiveCollapsed = showTitle ? isCollapsed : false;
-    const collapseTool = (showItemToolbar && showTitle) ? (
-        <ToolButton
-            glyph={effectiveCollapsed ? 'next' : 'bottom'}
-            tooltipKey={effectiveCollapsed
-                ? 'widgets.filterWidget.expandFilter'
-                : 'widgets.filterWidget.collapseFilter'}
-            tooltipId={`flt-c-${filterData.id}`}
-            onClick={handleToggleCollapse}
-            className="ms-filter-collapse-toggle"
-        />
-    ) : null;
     const showZoomButton = (interactions || []).some(interaction =>
         interaction?.plugged === true
         && interaction?.targetType === TARGET_TYPES.APPLY_ZOOM_TO
@@ -458,7 +447,6 @@ const FilterView = ({
                 </div>
             )}
             <div className="ms-filter-selector-header">
-                {collapseTool}
                 {showTitle
                     ? (
                         <span
