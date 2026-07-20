@@ -2602,7 +2602,7 @@
         "applyDimension": "Applica dimensione",
         "zoomTo": "Zoom su",
         "zoomToRequiresApplyFilterTooltip": "Collega un target Applica filtro a un layer di questa mappa prima di abilitare Zoom su",
-        "autoZoomForAllMapsTooltip": "Zoom automatico sull'estensione filtrata ai cambi di selezione. Disabilita per usare lo zoom manuale. Lo zoom automatico è condiviso tra tutte le mappe collegate. Modificando questa impostazione, verranno aggiornate tutte le mappe collegate.",
+        "autoZoomForAllMapsTooltip": "Esegue automaticamente lo zoom sull'estensione filtrata quando la selezione cambia. Disattiva questa opzione per utilizzare lo zoom manuale. Un filtro può utilizzare una sola modalità di zoom, pertanto questa impostazione si applica a tutte le mappe collegate.",
         "zoomToFilterExtent": "Zoom sull'estensione filtrata",
         "autoZoomLabel": "Zoom automatico",
         "autoZoomInfo": "Zoom automatico sull'estensione filtrata ai cambi di selezione. Disabilita per usare lo zoom manuale.",

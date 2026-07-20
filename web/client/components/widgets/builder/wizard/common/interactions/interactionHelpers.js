@@ -33,17 +33,19 @@ const DEFAULT_NODE_DISABLED = {
  * @returns {boolean}
  */
 function hasApplyFilterSibling(zoomTargetNodePath, sourceConnections) {
-    const applyFilterConnections = sourceConnections.filter(i =>
-        i.targetType === TARGET_TYPES.APPLY_FILTER && i.plugged && isAnyLayerPath(i?.target?.nodePath)
+    const applyFilterConnections = sourceConnections.filter(connection =>
+        connection.targetType === TARGET_TYPES.APPLY_FILTER
+        && connection.plugged
+        && isAnyLayerPath(connection?.target?.nodePath)
     );
 
     if (isMapZoomToTarget(zoomTargetNodePath)) {
-        return applyFilterConnections.some(i => isMapLayerPath(i?.target?.nodePath));
+        return applyFilterConnections.some(connection => isMapLayerPath(connection?.target?.nodePath));
     }
 
     const zoomMapId = extractMapIdFromNodePath(zoomTargetNodePath);
-    return applyFilterConnections.some(i => {
-        const layerNodePath = i?.target?.nodePath;
+    return applyFilterConnections.some(connection => {
+        const layerNodePath = connection?.target?.nodePath;
         return !isMapLayerPath(layerNodePath) && extractMapIdFromNodePath(layerNodePath) === zoomMapId;
     });
 }

@@ -1051,21 +1051,6 @@ function fetchLayerExtent(layer) {
 }
 
 /**
- * Computes the union of multiple extents in `[minx, miny, maxx, maxy]` format.
- * @param {number[][]} extents - Array of extent arrays
- * @returns {number[]} Union extent
- */
-function unionExtents(extents) {
-    return extents.reduce((acc, ext) => [
-        Math.min(acc[0], ext[0]),
-        Math.min(acc[1], ext[1]),
-        Math.max(acc[2], ext[2]),
-        Math.max(acc[3], ext[3])
-    ]);
-}
-
-
-/**
 /**
  * Resolves and combines the filtered extents of connected layers (using WPS
  * with WFS fallback) and zooms the target map.
@@ -1095,11 +1080,16 @@ function applyInteractionEffectForZoomTo(interaction, filterWidget, state, targe
         resolvedLayers.map(({layer} = {}) => fetchLayerExtent(layer).catch(() => Rx.Observable.of(null)))
     )
         .switchMap(extents => {
-            const valid = extents.filter(Boolean);
-            if (valid.length === 0) {
+            const validExtents = extents.filter(Boolean);
+            if (validExtents.length === 0) {
                 return Rx.Observable.empty();
             }
-            const union = unionExtents(valid);
+            const unionExtent = validExtents.reduce((acc, ext) => [
+                Math.min(acc[0], ext[0]),
+                Math.min(acc[1], ext[1]),
+                Math.max(acc[2], ext[2]),
+                Math.max(acc[3], ext[3])
+            ]);
 
             // Get unique map targets
             const uniqueTargets = [];
@@ -1112,7 +1102,7 @@ function applyInteractionEffectForZoomTo(interaction, filterWidget, state, targe
                 }
             });
 
-            const actions = uniqueTargets.map(target => buildZoomToExtentAction(union, target, targetContainer));
+            const actions = uniqueTargets.map(target => buildZoomToExtentAction(unionExtent, target, targetContainer));
             return Rx.Observable.from(actions);
         })
         .catch(() => Rx.Observable.empty());

@@ -1210,3 +1210,62 @@ export const findAllApplyFiltersForZoomTo = (zoomInteraction, siblingInteraction
         return !isMapLayerPath(layerNodePath) && extractMapIdFromNodePath(layerNodePath) === zoomMapId;
     });
 };
+
+/**
+ * Checks if there are multiple zoom-to nodes in the tree.
+ * @param {object} tree - The tree to search
+ * @returns {boolean}
+ */
+export const containsMultipleZoomToNodes = (tree) => {
+    let count = 0;
+    const visit = (node) => {
+        if (!node || count > 1) return;
+        if (isAnyZoomToTarget(node.nodePath)) {
+            count++;
+        }
+        node.children?.forEach(visit);
+    };
+    visit(tree);
+    return count > 1;
+};
+
+const isGlobalZoomToInteraction = (interaction = {}, sourceNodePath) =>
+    isAnyZoomToTarget(interaction.target?.nodePath)
+    && interaction.source?.nodePath === sourceNodePath;
+
+/**
+ * Returns whether auto-zoom is enabled for the global zoom To interaction
+ * originating from the specified source node.
+ * @param {object[]} interactions Array of interactions
+ * @param {string} sourceNodePath Source node path
+ * @returns {boolean}
+ */
+export const getGlobalAutoZoom = (interactions = [], sourceNodePath) => {
+    return interactions.find(
+        (interaction) => isGlobalZoomToInteraction(interaction, sourceNodePath)
+    )?.configuration?.autoZoom ?? false;
+};
+
+/**
+ * Updates the auto-zoom setting for all zoom To interactions associated
+ * with the specified source node. Filter interactions (per filter) share a single auto-zoom
+ * behavior across all target maps, so the setting is applied consistently to
+ * every matching interaction.
+ * @param {object[]} interactions Array of interactions
+ * @param {string} sourceNodePath Source node path
+ * @param {boolean} autoZoom Auto-zoom value to set
+ * @returns {object[]} Updated interactions
+ */
+export const updateGlobalZoomInteractionsAutoZoom = (interactions = [], sourceNodePath, autoZoom) => {
+    return interactions.map((interaction) =>
+        isGlobalZoomToInteraction(interaction, sourceNodePath)
+            ? {
+                ...interaction,
+                configuration: {
+                    ...(interaction.configuration || {}),
+                    autoZoom
+                }
+            }
+            : interaction
+    );
+};

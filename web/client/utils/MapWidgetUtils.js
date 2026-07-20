@@ -47,11 +47,9 @@ export const getVisibleOverlappingWidgetElements = (mapContainer, doc = document
     if (!mapContainer || typeof mapContainer.getBoundingClientRect !== 'function') {
         return [];
     }
-    const mapRect = mapContainer.getBoundingClientRect();
     return Array.from(doc.querySelectorAll(WIDGET_CARD_SELECTOR))
         .filter((element) => !element.contains(mapContainer))
-        .filter(isElementVisible)
-        .filter((element) => elementsOverlap(element.getBoundingClientRect(), mapRect));
+        .filter(isElementVisible);
 };
 
 /**
